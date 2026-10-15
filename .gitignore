@@ -4,3 +4,6 @@ obj/
 publish/
 .vs/
 artifacts/
+
+# Documents dropped at the root to try the viewer on are nobody else's business.
+/*.pdf

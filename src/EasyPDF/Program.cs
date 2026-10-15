@@ -16,6 +16,14 @@ public static class Program
     public static int Main(string[] args)
     {
         StartupTrace.Mark("main");
+
+        // The installer, having registered EasyPDF for PDF files: Explorer is told, and that is all.
+        if (args is ["--associations-changed"])
+        {
+            ShellNotify.AssociationsChanged();
+            return 0;
+        }
+
         var files = args.Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToArray();
         var alone = args.Contains("--new-instance", StringComparer.OrdinalIgnoreCase);
 

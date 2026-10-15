@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  EasyPDF (published by DYNATEC) - Windows Installer authoring (WiX v5, v4 schema).
+
+  This is a PER-USER package. It installs into %LOCALAPPDATA%\Programs\EasyPDF and writes only
+  to HKCU, so installing, upgrading and uninstalling never require administrator rights.
+
+  ============================ USER DATA MUST SURVIVE UPDATES ============================
+  Settings (where each document was left, the recent and pinned files) and the log live in
+  %LOCALAPPDATA%\EasyPDF, which is a DIFFERENT folder from the installation directory above.
+  Nothing in this file may create, write to or remove anything under %LOCALAPPDATA%\EasyPDF:
+  no Directory, no Component, no RegistryKey, no RemoveFile/RemoveFolder and no custom action.
+  Install, upgrade, repair and uninstall all have to leave that folder byte for byte as it was.
+  =======================================================================================
+
+  PDF files: the package registers EasyPDF as a program that opens them - in "Open with", and
+  in Settings > Apps > Default apps - but does not make itself the default. Windows reserves
+  that choice for the user, and a viewer that quietly took it would be rude.
+
+  Required preprocessor variables (wix build -d Name=Value ...):
+    Version     the product version, e.g. 1.2.3 (three or four numbers and no -prerelease
+                suffix: MSI compares numbers only, so a tag like 1.2.3-beta cannot upgrade)
+    PublishDir  absolute path to the dotnet publish output folder, WITHOUT a trailing backslash
+  Optional:
+    AboutUrl    the support URL shown in Apps and Features
+
+  Build it with build\release.ps1.
+-->
+
+<?ifndef AboutUrl?>
+<?define AboutUrl = "https://github.com/bendikme/EasyPDF"?>
+<?endif?>
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+    UpgradeCode: the identity of this product across every version it will ever have.
+    NEVER CHANGE THIS GUID. If it changes, new builds install alongside the old ones instead
+    of upgrading them, and users end up with two copies of the app.
+  -->
+  <Package Name="EasyPDF"
+           Manufacturer="DYNATEC"
+           Version="$(var.Version)"
+           UpgradeCode="BFD88C10-4963-42E4-AB28-B693BBB608F7"
+           Scope="perUser"
+           Compressed="yes"
+           InstallerVersion="500"
+           Language="1033">
+
+    <!-- An update is a major upgrade: the previous build is removed, then this one installs.
+         AllowSameVersionUpgrades lets a rebuilt 1.2.3 replace an installed 1.2.3. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of EasyPDF is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Replacing a viewer's files must never restart Windows. If a file is still locked (a
+         window left open), the install completes anyway and Windows swaps it at the next logon. -->
+    <Property Id="REBOOT" Value="ReallySuppress" />
+
+    <!-- %LOCALAPPDATA%\Programs\EasyPDF - the install folder, and the ONLY place this package
+         writes files. It is deliberately not %LOCALAPPDATA%\EasyPDF. -->
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="LocalProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="EasyPDF" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppProgramMenuFolder" Name="DYNATEC" />
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="EasyPDF" Level="1" AllowAbsent="no" AllowAdvertise="no">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="PdfRegistration" />
+    </Feature>
+
+    <!-- Start menu entry. A per-user shortcut needs an HKCU key path, and the folder it lives in
+         has to be removed explicitly on uninstall - unless another DYNATEC app still has its
+         shortcut there, in which case Windows Installer leaves the folder alone. -->
+    <Component Id="StartMenuShortcut" Directory="AppProgramMenuFolder" Guid="AEF6F543-5654-4A51-A254-07EBD78A7AFE">
+      <Shortcut Id="AppShortcut"
+                Name="EasyPDF"
+                Description="Fast PDF viewer"
+                Target="[INSTALLFOLDER]EasyPDF.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="EasyPDF.ico" />
+      <RemoveFolder Id="RemoveAppProgramMenuFolder" Directory="AppProgramMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\DYNATEC\EasyPDF" Name="StartMenuShortcut"
+                     Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- PDF files. A ProgID that opens them; .pdf offering it in "Open with"; the executable
+         known by name (so "Open with > Choose another app" lists it with its own name and icon);
+         and Capabilities registered with Windows, which is what makes EasyPDF appear in
+         Settings > Apps > Default apps. All of it is under HKCU\Software, written on install and
+         removed on uninstall - none of it overrides the user's own choice of default. -->
+    <Component Id="PdfRegistration" Directory="INSTALLFOLDER" Guid="A2976B34-A830-4596-95AE-507997A08029">
+      <RegistryValue Root="HKCU" Key="Software\DYNATEC\EasyPDF" Name="PdfRegistration"
+                     Type="integer" Value="1" KeyPath="yes" />
+
+      <RegistryKey Root="HKCU" Key="Software\Classes\EasyPDF.Document">
+        <RegistryValue Type="string" Value="PDF Document" />
+        <RegistryValue Name="FriendlyTypeName" Type="string" Value="PDF Document" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]EasyPDF.exe&quot;,0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open">
+          <RegistryValue Name="FriendlyAppName" Type="string" Value="EasyPDF" />
+          <RegistryKey Key="command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]EasyPDF.exe&quot; &quot;%1&quot;" />
+          </RegistryKey>
+        </RegistryKey>
+      </RegistryKey>
+
+      <RegistryValue Root="HKCU" Key="Software\Classes\.pdf\OpenWithProgids" Name="EasyPDF.Document"
+                     Type="string" Value="" />
+
+      <RegistryKey Root="HKCU" Key="Software\Classes\Applications\EasyPDF.exe">
+        <RegistryValue Name="FriendlyAppName" Type="string" Value="EasyPDF" />
+        <RegistryKey Key="SupportedTypes">
+          <RegistryValue Name=".pdf" Type="string" Value="" />
+        </RegistryKey>
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]EasyPDF.exe&quot;,0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]EasyPDF.exe&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <RegistryKey Root="HKCU" Key="Software\DYNATEC\EasyPDF\Capabilities">
+        <RegistryValue Name="ApplicationName" Type="string" Value="EasyPDF" />
+        <RegistryValue Name="ApplicationDescription" Type="string" Value="A fast PDF viewer that follows every link." />
+        <RegistryValue Name="ApplicationIcon" Type="string" Value="&quot;[INSTALLFOLDER]EasyPDF.exe&quot;,0" />
+        <RegistryKey Key="FileAssociations">
+          <RegistryValue Name=".pdf" Type="string" Value="EasyPDF.Document" />
+        </RegistryKey>
+      </RegistryKey>
+      <RegistryValue Root="HKCU" Key="Software\RegisteredApplications" Name="EasyPDF"
+                     Type="string" Value="Software\DYNATEC\EasyPDF\Capabilities" />
+    </Component>
+
+    <!-- Explorer shows the new registration at once rather than after the next sign-in. -->
+    <CustomAction Id="NotifyAssociationsChanged"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]EasyPDF.exe&quot; --associations-changed"
+                  Return="ignore" />
+
+    <!-- Apps and Features presentation. ARPNOREPAIR and ARPNOMODIFY count as set whenever they
+         carry any value at all, "0" included, so only the one that has to be on is declared:
+         there is a single feature and nothing to modify, but repair must stay available. -->
+    <Icon Id="EasyPDF.ico" SourceFile="$(sys.SOURCEFILEDIR)..\src\EasyPDF\Assets\easypdf.ico" />
+    <Property Id="ARPPRODUCTICON" Value="EasyPDF.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="$(var.AboutUrl)" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <!-- Start the app once the install finishes. UILevel is 2 for /qn and 3 for /qb, so a
+         silent install never launches anything, while a visible one does. LAUNCHAPP=0 opts out.
+         The app holds a single-instance lock, so a copy started while another runs hands over
+         to it and exits. -->
+    <Property Id="LAUNCHAPP" Value="1" />
+
+    <CustomAction Id="LaunchApplication"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]EasyPDF.exe&quot;"
+                  Return="asyncNoWait" />
+
+    <InstallExecuteSequence>
+      <Custom Action="NotifyAssociationsChanged" After="InstallFinalize"
+              Condition="NOT REMOVE" />
+      <Custom Action="LaunchApplication" After="NotifyAssociationsChanged"
+              Condition="NOT Installed AND UILevel &gt; 3 AND LAUNCHAPP = &quot;1&quot;" />
+    </InstallExecuteSequence>
+
+  </Package>
+
+  <Fragment>
+    <!-- Everything dotnet publish produced is harvested at build time, so a new dependency
+         is packaged automatically instead of having to be listed here by hand. -->
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.PublishDir)\**" />
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>

@@ -36,8 +36,11 @@ follows every kind of link a PDF can hold.
   them from the file itself - through cross-reference and object streams, and from a copy
   PDFium writes when the file is encrypted. Hovering shows where a link goes, as a browser does.
   Where a followed link leads is marked for a moment - a red frame that blinks three times and
-  fades - round the line of text the destination points at, the area it names, or the whole page.
-  Back and Forward (Alt+Left/Right, the mouse's side buttons) return from a jump. Links are
+  fades - round the element the document itself marks (an EPLAN cross-reference ends in a
+  script that names the button referring back; EasyPDF reads that call, it runs no script), the
+  line of text the destination points at, the area it names, or else the whole page - and that
+  element is brought into sight. Back and Forward (Alt+Left/Right, the mouse's side buttons)
+  return from a jump, and the trail of jumps shows the way back (below). Links are
   hit-tested on their exact quadrilaterals, at any zoom and rotation, and a click or tap made
   before a page's links are read is still followed.
 - **Safe links.** Web and mail links open directly. Other PDFs open in EasyPDF. Documents and
@@ -50,14 +53,27 @@ follows every kind of link a PDF can hold.
   starting at the page being read; match case and whole words are in the menu. Text can be
   selected by dragging (across pages too), by double-click (a word) or triple-click (a line), and
   copied.
-- **One page at a time**, or one continuous column (the zoom menu or the More menu). One page
-  at a time, nothing of the other pages is in sight; the arrow keys, Page Up/Down, Space, the
-  wheel and the scroll bar scroll a page taller than the window, then turn to the next - at once,
-  not scrolling - and each turn shows for a moment which page it is, of how many, with a line
-  for how far through the document. A touchpad's stream of small deltas turns one page, not a
-  dozen. The choice is remembered for each document, and taken for new ones.
+- **Continuous, one page at a time, or a grid of pages** (the page display button, or the More
+  menu): one page, two side by side, two with the cover alone (a book's spreads), two one above
+  the other, 2 x 2, 3 x 2, 3 x 3 - or any grid up to 6 x 4, picked by pointing at cells. A fixed
+  number at a time, nothing of the other pages is in sight; the arrow keys, Page Up/Down, Space,
+  the wheel and the scroll bar scroll a sheet taller than the window, then turn to the next - at
+  once, not scrolling - and each turn shows for a moment which pages these are ("5-8 of 2124"),
+  with a line for how far through the document. A grid of several pages is fitted whole when it
+  is chosen. Shift+Down/Up turns at once however far the sheet could still scroll, and, held,
+  faster and faster (1, 2, 5, 10, then 25 sheets a step). Turns are smooth: the sheets either
+  side are drawn ahead, so the next one is complete the moment it shows, and the one turned from
+  fades out in 130 ms (not when Windows is set to show no animations, nor in quick succession). A
+  touchpad's stream of small deltas turns one sheet, not a dozen. The choice is remembered for
+  each document, and taken for new ones.
+- **The trail of jumps.** Once a link (or the outline, or a page number typed in) has taken the
+  reader somewhere, a bar over the page shows the places behind and ahead - the page the link
+  was clicked on, not just the one most in view - each a click away however many steps back or
+  forward it is; pointing at one shows a picture of the page and the part of the document it is
+  in. A long trail folds into "..." menus. The bar dims after a few seconds so the drawing under
+  it shows, brightens under the pointer, and can be hidden until the next jump.
 - **Outline and pages.** The sidebar shows the document's outline, or thumbnails of its pages
-  that follow the page being read.
+  that follow the page being read; compact rows fit half as many again into it.
 - **Reloads by itself.** The file is never locked: whatever writes it (a LaTeX build, a report
   generator) can replace it while it is open, and EasyPDF reloads it at the same place.
 - **Remembers where you were.** Reopening a document returns to the page, position, zoom,
@@ -80,10 +96,18 @@ follows every kind of link a PDF can hold.
 - **Light and dark**, following the Windows app mode live, and **English and Norwegian**,
   following the Windows display language - the same design system as Remote Desktop Manager.
 
+## Install
+
+Download `EasyPDF-<version>-x64.msi` from the [releases](https://github.com/bendikme/EasyPDF/releases)
+and run it: it installs for the current user (no administrator rights), adds EasyPDF to the Start
+menu and to "Open with" for PDF files, and starts it. Or unzip `EasyPDF-<version>-win-x64.zip`
+anywhere and run `EasyPDF.exe`. Both carry their own .NET, so nothing else is needed. Settings
+stay in `%LOCALAPPDATA%\EasyPDF` through updates and uninstalls. See [installer](installer/README.md).
+
 ## Requirements
 
 - Windows 10 1809 or newer, x64
-- The .NET 10 Desktop Runtime (or publish self-contained, which needs nothing)
+- To build: the .NET 10 SDK (and WiX 5 for the installer)
 
 ## Building
 
@@ -92,7 +116,12 @@ dotnet build src\EasyPDF\EasyPDF.csproj        # development build
 dotnet run --project src\EasyPDF\EasyPDF.csproj -- C:\path\to\file.pdf
 .\build\publish.ps1                              # ready-to-run folder in artifacts\publish
 .\build\publish.ps1 -SelfContained -Version 1.2.3
+.\build\release.ps1 -Version 1.2.3               # the MSI, the portable zip and checksums in artifacts
 ```
+
+A release is cut by pushing a tag: `git tag v1.2.3` then `git push origin v1.2.3`. The release
+workflow (`.github/workflows/release.yml`) builds the installer and the zip and publishes them
+as a GitHub release.
 
 ## Checks
 
@@ -105,14 +134,16 @@ dotnet run --project tests\EasyPDF.Tests -c Release -- --bench [file.pdf]
 The checks open real documents (`tests\fixtures`, made by `tests\fixtures\make_fixtures.py`) in
 real, off-screen windows and drive them the way a user does. They cover every link kind on
 every kind of page (rotated, zoomed, scrolled, before its links are read), one page at a time
-by key, wheel, touchpad and scroll bar, the mark on a link's destination, pinned and missing
+and grids by key, wheel, touchpad, scroll bar and picker, fast and smooth turns, the trail of
+jumps, the mark on a link's destination (EPLAN's, on turned pages too), compact rows, pinned and missing
 recent files, a share that does not answer (played by a stand-in that stalls), named actions and
 buttons in plain, compressed and encrypted files, a form of 20,000 buttons, a document opened
 afresh to free PDFium's memory, the link policy, tiles that must join the whole-page
 render pixel for pixel at every rotation and zoom, search, selection, outline, passwords,
 damaged and missing files, files past 2 GB and 4 GB, reload on change, memory staying within
 its budget, closed windows and documents being released, managed memory that stays flat (within a few kilobytes) over
-sixteen rounds of opening and closing seven kinds of document, printing into a device context, every
+eighteen rounds of opening and closing seven kinds of document - continuous, one page at a time
+and in a 2 x 2 grid - printing into a device context, every
 dialog and menu in both languages, and the real executable handing a second launch over to the
 running one. The reader of the file's own objects is fed thousands of damaged files from memory that
 ends at an inaccessible page, so a single byte read too far would stop the run.
@@ -120,7 +151,7 @@ ends at an inaccessible page, so a single byte read too far would stop the run.
 first tiles and links, and follow memory as its pages are read. Nothing reaches
 the shell, the user's settings or a running EasyPDF - the last check makes sure of it.
 
-`tests\tools` turns the screenshot tool's output into PNGs (`--screenshot <folder>`, then
+`tests\tools` turns the screenshot tool's output into PNGs (`--screenshot <folder> [large.pdf]`, then
 `python tests\tools\xps2png.py <folder>`) and rebuilds the icon (`make_icon.py`).
 
 Set `EASYPDF_TRACE` to a file path to have the app record its start-up milestones there
@@ -141,7 +172,8 @@ settings and the log in another folder.
 | Ctrl+C, Ctrl+A | Copy, select all |
 | Ctrl+P, Ctrl+D | Print, document properties |
 | F4, F5, F11 | Sidebar, reload, full screen |
-| Page Up/Down, Space, Home, End, arrows | Move through the document |
+| Page Up/Down, Space, Home, End, arrows | Move through the document; a fixed number of pages at a time, Left and Right turn |
+| Shift+Down, Shift+Up | Turn at once; held, faster and faster |
 
 ## How it is put together
 
@@ -154,6 +186,7 @@ settings and the log in another folder.
 | `src\EasyPDF\Services` | Settings, link policy, printing, single instance, theme, language, log |
 | `src\EasyPDF\Resources` | Every piece of UI text: `Strings.resx` (English) and `Strings.nb.resx` (Norwegian). A new string goes into both |
 | `tests` | The regression checks, their fixtures and tools |
+| `installer`, `build` | The per-user MSI (WiX 5), and the publish and release scripts |
 
 Third-party notices are in `src\EasyPDF\ThirdParty` and ship beside the executable in
 `licenses\`.
