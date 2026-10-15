@@ -102,7 +102,12 @@ public sealed partial class Updater
     public string? InstallerPath { get; private set; }
 
     /// <summary>The running build's version, without "+build" metadata.</summary>
-    public static string CurrentVersion { get; } = ResolveCurrentVersion();
+    public static string CurrentVersion => VersionOverride ?? RunningVersion;
+
+    private static readonly string RunningVersion = ResolveCurrentVersion();
+
+    /// <summary>Tools: the version to compare releases with, instead of this build's.</summary>
+    internal static string? VersionOverride { get; set; }
 
     /// <summary>Tests: whether this copy counts as installed by the MSI. By default, whether it runs from the MSI's folder.</summary>
     internal static bool? InstalledOverride { get; set; }

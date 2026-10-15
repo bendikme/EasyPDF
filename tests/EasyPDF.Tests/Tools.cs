@@ -296,6 +296,35 @@ internal static class Tools
         return 0;
     }
 
+    /// <summary>
+    /// The updater against the real GitHub: as version 0.9.0 (or the one given), it finds the
+    /// newest release, downloads its installer and checks it, and says what it would start - it
+    /// starts nothing, and installs nothing.
+    /// </summary>
+    public static int UpdateEndToEnd(string[] args)
+    {
+        EasyPDF.Services.Updater.VersionOverride = args.FirstOrDefault() ?? "0.9.0";
+        EasyPDF.Services.Updater.InstalledOverride = true;
+        System.Diagnostics.ProcessStartInfo? started = null;
+        EasyPDF.Services.Updater.LaunchOverride = info =>
+        {
+            started = info;
+            return true;
+        };
+        var updater = new EasyPDF.Services.Updater(System.Windows.Threading.Dispatcher.CurrentDispatcher);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var outcome = Await(updater.CheckAsync(download: true), 300000);
+        Console.WriteLine($"outcome {outcome} after {sw.ElapsedMilliseconds} ms; state {updater.State}; release {updater.Release}");
+        if (updater.InstallerPath is { } path)
+        {
+            var bytes = new FileInfo(path).Length;
+            var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path)));
+            Console.WriteLine($"installer {path}: {bytes} bytes, sha256 {hash}");
+        }
+        Console.WriteLine($"on closing it would start: {(updater.InstallOnExit() && started is { } s ? $"{s.FileName} {string.Join(" ", s.ArgumentList)}" : "nothing")}");
+        return outcome == EasyPDF.Services.UpdateCheckOutcome.Ready ? 0 : 1;
+    }
+
     public static unsafe int DiagLeak()
     {
         var steps = new (string Name, Action<PdfDocument> Use)[]
