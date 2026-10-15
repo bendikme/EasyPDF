@@ -172,6 +172,8 @@ public partial class MainWindow
         Add(Strings.More_MatchCase, () => SetSearchOptions(!_matchCase, _wholeWord), null, hasDocument, isChecked: _matchCase);
         Add(Strings.More_WholeWords, () => SetSearchOptions(_matchCase, !_wholeWord), null, hasDocument, isChecked: _wholeWord);
         menu.Items.Add(new Separator());
+        foreach (var item in UpdateMenuItems()) menu.Items.Add(item);
+        menu.Items.Add(new Separator());
         menu.Items.Add(BuildRecentMenu());
         Add(Strings.More_NewWindow, () => _app.OpenEmptyWindow(this), "Ctrl+N", true);
         Add(Strings.More_Reload, () => _ = Reload(), "F5", hasDocument);

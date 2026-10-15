@@ -110,6 +110,15 @@ menu and to "Open with" for PDF files, and starts it. Or unzip `EasyPDF-<version
 anywhere and run `EasyPDF.exe`. Both carry their own .NET, so nothing else is needed. Settings
 stay in `%LOCALAPPDATA%\EasyPDF` through updates and uninstalls. See [installer](installer/README.md).
 
+**It keeps itself up to date.** Once a day (the first time half a minute after start-up, so it
+never slows it) EasyPDF asks GitHub for the newest release. A newer one is downloaded in the
+background and checked against the release's `SHA256SUMS.txt`; it then installs by itself when
+EasyPDF closes - silently, nothing to click - or at once from the **Update** button that appears
+in the header, which restarts EasyPDF with the same documents open. A portable copy is only told
+about a newer release and pointed to its page. **Check for updates** and **Update automatically**
+are in the More menu. Downloads go to `%LOCALAPPDATA%\EasyPDF\updates` and nowhere else.
+`EASYPDF_UPDATES=off` switches checking off entirely.
+
 ## Requirements
 
 - Windows 10 1809 or newer, x64
@@ -147,7 +156,10 @@ buttons in plain, compressed and encrypted files, a form of 20,000 buttons, a do
 afresh to free PDFium's memory, the link policy, tiles that must join the whole-page
 render pixel for pixel at every rotation and zoom, search, selection, outline, passwords,
 damaged and missing files, files past 2 GB and 4 GB, reload on change, memory staying within
-its budget, closed windows and documents being released, managed memory that stays flat (within a few kilobytes) over
+its budget, updating (against a stand-in for GitHub: a newer release downloaded, checked and installed on
+closing or by a restart that reopens the documents, a bad checksum or size refused, a portable
+copy only pointed to the release, nothing taken from anywhere but GitHub),
+closed windows and documents being released, managed memory that stays flat (within a few kilobytes) over
 eighteen rounds of opening and closing seven kinds of document - continuous, one page at a time
 and in a 2 x 2 grid - printing into a device context, every
 dialog and menu in both languages, and the real executable handing a second launch over to the

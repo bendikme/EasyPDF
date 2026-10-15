@@ -86,9 +86,18 @@ public partial class MainWindow
 
     internal ThumbnailSource? Thumbnails => _thumbnails;
 
-    internal void ShowPagesInSidebar() => ShowSidebarMode(SidebarMode.Pages);
+    /// <summary>As a click on the chip: the reader's choice, which the outline arriving later does not override.</summary>
+    internal void ShowPagesInSidebar()
+    {
+        _sidebarModeChosen = true;
+        ShowSidebarMode(SidebarMode.Pages);
+    }
 
-    internal void ShowOutlineInSidebar() => ShowSidebarMode(SidebarMode.Outline);
+    internal void ShowOutlineInSidebar()
+    {
+        _sidebarModeChosen = true;
+        ShowSidebarMode(SidebarMode.Outline);
+    }
 
     private void InitializeSidebar()
     {

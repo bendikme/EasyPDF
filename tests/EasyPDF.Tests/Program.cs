@@ -103,7 +103,7 @@ public static partial class Program
 
     private static IEnumerable<(string, Action)> AllChecks() =>
         EngineChecks.All().Concat(LinkChecks.All()).Concat(LayoutChecks.All()).Concat(ViewerChecks.All()).Concat(FeatureChecks.All())
-            .Concat(NavigationChecks.All()).Concat(ProcessChecks.All());
+            .Concat(NavigationChecks.All()).Concat(UpdateChecks.All()).Concat(ProcessChecks.All());
 
     private static void Run(string name, Action test)
     {
@@ -132,6 +132,13 @@ public static partial class Program
             SettingsStore.Current.Settings.Recent.Clear();
             SettingsStore.Current.Settings.SinglePage = false;
             SettingsStore.Current.Settings.Grid = null;
+            SettingsStore.Current.Settings.AutoUpdate = true;
+            SettingsStore.Current.Settings.LastUpdateCheckUtc = null;
+            SettingsStore.Current.Settings.ReopenAfterUpdate = null;
+            Updater.Current?.Stop();
+            Updater.Current = null;
+            Updater.InstalledOverride = null;
+            Updater.LaunchOverride = _ => throw new InvalidOperationException("An update tried to start an installer.");
             FileAvailability.AskOverride = null;
             FileAvailability.Reset();
             PdfDocument.BeforeOpenFile = null;

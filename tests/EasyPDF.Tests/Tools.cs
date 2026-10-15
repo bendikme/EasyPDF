@@ -267,6 +267,18 @@ internal static class Tools
             grid.SetCompactSidebar(false);
             grid.Close();
 
+            // An update downloaded and ready: the header offers it.
+            UpdateChecks.MakeReady();
+            var updating = App.OpenEmptyWindow(null);
+            updating.Width = 1180;
+            updating.Height = 820;
+            Await(updating.OpenAsync(Fixture("links.pdf")));
+            PumpUntil(() => updating.UpdateOffered && updating.PageView.IsScreenComplete() && !updating.PageView.Tiles.IsBusy, "the update offered");
+            Pump(200);
+            Snap(updating, Path.Combine(dir, $"update-{name}.png"));
+            updating.Close();
+            EasyPDF.Services.Updater.Current = null;
+
             // The grid picker, as the page display menu shows it.
             var picker = new Window
             {

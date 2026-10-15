@@ -88,6 +88,13 @@ public partial class App : Application
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () =>
             FileAvailability.Check(SettingsStore.Current.Settings.Recent.Select(r => r.Path).ToList()));
 
+        // Updates are looked for once everything else is done (the first check is half a minute on).
+        Updater.Current = new Updater(Dispatcher);
+        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => Updater.Current?.Start());
+
+        // Restarted by an update: the documents that were open, open again.
+        if (_files.Length == 0 && ReopenAfterUpdate()) return;
+
         if (_files.Length == 0)
         {
             OpenEmptyWindow(null);
@@ -108,9 +115,53 @@ public partial class App : Application
         }
         _shuttingDown = true;
         SingleInstance.Stop();
+        // A downloaded update installs now, silently: the next start is the new version.
+        if (!_restartingToUpdate) Updater.Current?.InstallOnExit();
+        Updater.Current?.Stop();
         SettingsStore.Current.Flush();
         AppLog.Shutdown();
         base.OnExit(e);
+    }
+
+    private bool _restartingToUpdate;
+
+    /// <summary>
+    /// Installs the downloaded update now: the documents open in every window are noted for the
+    /// new version to open again, the installer starts (with its progress window, and it starts
+    /// EasyPDF when it is done), and every window closes. Returns false, changing nothing, when the
+    /// installer could not be started.
+    /// </summary>
+    public bool RestartToUpdate()
+    {
+        if (Updater.Current is not { State: UpdateState.Ready } updater) return false;
+        var settings = SettingsStore.Current;
+        settings.Settings.ReopenAfterUpdate = DocumentWindows.Select(w => w.DocumentPath).OfType<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase).Take(20).ToList();
+        settings.Save();
+        settings.Flush();
+
+        if (!updater.InstallNow())
+        {
+            settings.Settings.ReopenAfterUpdate = null;
+            settings.Save();
+            return false;
+        }
+
+        _restartingToUpdate = true;
+        foreach (var window in DocumentWindows.ToArray()) window.Close();
+        if (!HostedByTests) Shutdown();
+        return true;
+    }
+
+    /// <summary>Opens the documents noted by <see cref="RestartToUpdate"/>, once. Returns whether a window opened.</summary>
+    internal bool ReopenAfterUpdate()
+    {
+        var settings = SettingsStore.Current;
+        if (settings.Settings.ReopenAfterUpdate is not { Count: > 0 } files) return false;
+        settings.Settings.ReopenAfterUpdate = null;
+        settings.Save();
+        foreach (var file in files) Open(file, null);
+        return DocumentWindows.Any();
     }
 
     /// <summary>Another launch handed over its command line. Runs on the pipe thread.</summary>

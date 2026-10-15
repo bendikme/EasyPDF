@@ -166,6 +166,51 @@ Detaljene står i {1}.</value>
   <data name="Trail_Hide" xml:space="preserve">
     <value>Skjul sporet</value>
   </data>
+  <data name="Update_Button" xml:space="preserve">
+    <value>Oppdater</value>
+  </data>
+  <data name="Update_Title" xml:space="preserve">
+    <value>Oppdatering</value>
+  </data>
+  <data name="Update_Ready_Tooltip" xml:space="preserve">
+    <value>EasyPDF {0} er klar. Den installeres når du lukker EasyPDF - eller start på nytt nå.</value>
+  </data>
+  <data name="Update_Available_Tooltip" xml:space="preserve">
+    <value>EasyPDF {0} er tilgjengelig</value>
+  </data>
+  <data name="Update_ReadyToast" xml:space="preserve">
+    <value>EasyPDF {0} er klar til å installeres</value>
+  </data>
+  <data name="Update_RestartNow" xml:space="preserve">
+    <value>Start på nytt og oppdater til {0}</value>
+  </data>
+  <data name="Update_Download" xml:space="preserve">
+    <value>Last ned EasyPDF {0}</value>
+  </data>
+  <data name="Update_WhatsNew" xml:space="preserve">
+    <value>Nytt i {0}</value>
+  </data>
+  <data name="Update_Check" xml:space="preserve">
+    <value>Se etter oppdateringer</value>
+  </data>
+  <data name="Update_Checking" xml:space="preserve">
+    <value>Ser etter oppdateringer …</value>
+  </data>
+  <data name="Update_UpToDate" xml:space="preserve">
+    <value>EasyPDF {0} er nyeste versjon</value>
+  </data>
+  <data name="Update_Failed" xml:space="preserve">
+    <value>Kunne ikke se etter oppdateringer</value>
+  </data>
+  <data name="Update_Automatic" xml:space="preserve">
+    <value>Oppdater automatisk</value>
+  </data>
+  <data name="Update_Automatic_Tooltip" xml:space="preserve">
+    <value>Se etter ny versjon daglig, last den ned og installer den når EasyPDF lukkes</value>
+  </data>
+  <data name="Update_InstallFailed" xml:space="preserve">
+    <value>Oppdateringen kunne ikke startes. EasyPDF prøver igjen når den lukkes.</value>
+  </data>
   <data name="Trail_Hide_Tooltip" xml:space="preserve">
     <value>Skjul til neste hopp. Alt+Venstre går fortsatt tilbake.</value>
   </data>

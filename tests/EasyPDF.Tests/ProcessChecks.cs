@@ -23,6 +23,8 @@ internal static class ProcessChecks
         foreach (var a in args) info.ArgumentList.Add(a);
         info.Environment["EASYPDF_INSTANCE"] = group;
         info.Environment["EASYPDF_DATA"] = data;
+        // The checks never reach the network.
+        info.Environment["EASYPDF_UPDATES"] = "off";
         return Process.Start(info) ?? throw new InvalidOperationException("EasyPDF did not start.");
     }
 

@@ -47,6 +47,8 @@
         <PathGeometry x:Key="GeoChevronDown" Figures="M6,9 L12,15 L18,9" />
         <PathGeometry x:Key="GeoBack" Figures="M19,12 L5,12 M11,6 L5,12 L11,18" />
         <PathGeometry x:Key="GeoChevronRight" Figures="M9.5,6 L15.5,12 L9.5,18" />
+        <!-- An arrow down onto a line: a new version to take in. -->
+        <PathGeometry x:Key="GeoUpdate" Figures="M12,4 L12,15 M7,10.5 L12,15.5 L17,10.5 M5,20 L19,20" />
         <PathGeometry x:Key="GeoForward" Figures="M5,12 L19,12 M13,6 L19,12 L13,18" />
         <PathGeometry x:Key="GeoDocument" Figures="M6,3 L14,3 L19,8 L19,21 L6,21 Z M14,3 L14,8 L19,8" />
         <!-- Rows close together: a compact list. -->
@@ -600,6 +602,21 @@
                             <views:IconPath Width="15" Height="15" Data="{StaticResource GeoPrint}" />
                         </Button>
                     </StackPanel>
+
+                    <!-- An update to restart into, or a newer release to fetch: only then. -->
+                    <Button x:Name="UpdateButton"
+                            Style="{StaticResource ToolbarToggleStyle}"
+                            Tag="on"
+                            Margin="0,0,4,0"
+                            Padding="8,0,10,0"
+                            Visibility="Collapsed"
+                            Click="OnUpdateClick"
+                            AutomationProperties.Name="{x:Static res:Strings.Update_Button}">
+                        <StackPanel Orientation="Horizontal">
+                            <views:IconPath Width="14" Height="14" Margin="0,0,6,0" Data="{StaticResource GeoUpdate}" StrokeThickness="2" />
+                            <TextBlock Text="{x:Static res:Strings.Update_Button}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
 
                     <!-- Everything else, and whatever the toolbar has no room for. -->
                     <Button x:Name="MoreButton"

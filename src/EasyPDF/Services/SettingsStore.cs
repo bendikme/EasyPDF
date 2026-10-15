@@ -67,6 +67,15 @@ public sealed class AppSettings
     /// <summary>Documents opened for the first time are shown a fixed number of pages at a time; from before grids.</summary>
     public bool SinglePage { get; set; }
 
+    /// <summary>Newer releases are looked for daily, downloaded, and installed when EasyPDF closes.</summary>
+    public bool AutoUpdate { get; set; } = true;
+
+    /// <summary>When GitHub was last asked for a newer release.</summary>
+    public DateTime? LastUpdateCheckUtc { get; set; }
+
+    /// <summary>The documents open when EasyPDF restarted to install an update: opened again by the new version, once.</summary>
+    public List<string>? ReopenAfterUpdate { get; set; }
+
     public List<RecentFile> Recent { get; set; } = new();
 }
 

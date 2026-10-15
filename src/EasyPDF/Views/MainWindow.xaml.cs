@@ -66,6 +66,7 @@ public partial class MainWindow : Window
 
         SettingsStore.Current.RecentChanged += OnRecentChanged;
         FileAvailability.Changed += OnAvailabilityChanged;
+        InitializeUpdates();
 
         InitializeSidebar();
         InitializeWatcher();
@@ -799,6 +800,7 @@ public partial class MainWindow : Window
         _openGeneration++;
         SettingsStore.Current.RecentChanged -= OnRecentChanged;
         FileAvailability.Changed -= OnAvailabilityChanged;
+        UnloadUpdates();
         _availabilityTimer?.Stop();
         StopPageIndicator();
         EndSearch(clearText: false);
