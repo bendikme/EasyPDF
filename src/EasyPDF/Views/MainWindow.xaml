@@ -1,0 +1,941 @@
+<Window x:Class="EasyPDF.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:EasyPDF.Resources"
+        xmlns:views="clr-namespace:EasyPDF.Views"
+        xmlns:viewer="clr-namespace:EasyPDF.Viewer"
+        xmlns:services="clr-namespace:EasyPDF.Services"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        Title="{x:Static services:AppIdentity.Name}"
+        Style="{StaticResource AppWindowStyle}"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
+        Width="1180"
+        Height="860"
+        MinWidth="600"
+        MinHeight="400"
+        AllowDrop="True">
+
+    <!-- No Windows title bar: the header strip below is the caption, with the window buttons at
+         its right edge. The one-pixel glass edge is what keeps the Windows shadow and corners. -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="44"
+                      ResizeBorderThickness="6"
+                      GlassFrameThickness="0,0,0,1"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+
+        <!-- ================================================================
+             Icons - 24 x 24 path data, stroked, scaled by a Viewbox.
+             ================================================================ -->
+
+        <PathGeometry x:Key="GeoSearch" Figures="M4,10.5 A6.5,6.5 0 1 1 17,10.5 A6.5,6.5 0 1 1 4,10.5 Z M15.4,15.4 L20,20" />
+        <PathGeometry x:Key="GeoFolder" Figures="M3,6 L9,6 L11,9 L21,9 L21,19 L3,19 Z" />
+        <PathGeometry x:Key="GeoSidebar" Figures="M3,5 L21,5 L21,19 L3,19 Z M9.5,5 L9.5,19" />
+        <PathGeometry x:Key="GeoPlus" Figures="M12,5 L12,19 M5,12 L19,12" />
+        <PathGeometry x:Key="GeoMinus" Figures="M5,12 L19,12" />
+        <PathGeometry x:Key="GeoFitWidth" Figures="M3.5,5 L3.5,19 M20.5,5 L20.5,19 M7.5,12 L16.5,12 M10.5,9 L7.5,12 L10.5,15 M13.5,9 L16.5,12 L13.5,15" />
+        <PathGeometry x:Key="GeoFitPage" Figures="M4,9 L4,4 L9,4 M15,4 L20,4 L20,9 M20,15 L20,20 L15,20 M9,20 L4,20 L4,15" />
+        <!-- A clockwise arc with the arrowhead on its end, pointing the way the arc runs. -->
+        <PathGeometry x:Key="GeoRotate" Figures="M19.5,12 A7.5,7.5 0 1 1 16.82,6.26 M16.51,2.67 L16.82,6.26 L13.23,6.57" />
+        <PathGeometry x:Key="GeoPrint" Figures="M7,9 L7,3.5 L17,3.5 L17,9 M7,17 L4,17 L4,9 L20,9 L20,17 L17,17 M7,14 L17,14 L17,20.5 L7,20.5 Z" />
+        <PathGeometry x:Key="GeoClose" Figures="M6,6 L18,18 M18,6 L6,18" />
+        <PathGeometry x:Key="GeoChevronUp" Figures="M6,15 L12,9 L18,15" />
+        <PathGeometry x:Key="GeoChevronDown" Figures="M6,9 L12,15 L18,9" />
+        <PathGeometry x:Key="GeoBack" Figures="M19,12 L5,12 M11,6 L5,12 L11,18" />
+        <PathGeometry x:Key="GeoChevronRight" Figures="M9.5,6 L15.5,12 L9.5,18" />
+        <PathGeometry x:Key="GeoForward" Figures="M5,12 L19,12 M13,6 L19,12 L13,18" />
+        <PathGeometry x:Key="GeoDocument" Figures="M6,3 L14,3 L19,8 L19,21 L6,21 Z M14,3 L14,8 L19,8" />
+        <!-- Rows close together: a compact list. -->
+        <PathGeometry x:Key="GeoCompact" Figures="M4,5 L20,5 M4,9.67 L20,9.67 M4,14.33 L20,14.33 M4,19 L20,19" />
+        <!-- A pushpin, its point to the lower left. -->
+        <PathGeometry x:Key="GeoPin" Figures="M14,3 L21,10 M15.5,4.5 L11,9 L7,9.5 L14.5,17 L15,13 L19.5,8.5 M10.5,13.5 L4,20" />
+        <PathGeometry x:Key="GeoLink" Figures="M10,14 A4,4 0 0 0 15.66,14 L18.5,11.17 A4,4 0 0 0 12.83,5.5 L11.5,6.83 M14,10 A4,4 0 0 0 8.34,10 L5.5,12.83 A4,4 0 0 0 11.17,18.5 L12.5,17.17" />
+
+        <!-- Window buttons in the header, drawn like the Windows ones: 46 wide, full height, the
+             system glyph font. Tag carries hover and pressed for the maximize button, whose mouse
+             input Windows takes over so it can offer snap layouts. -->
+        <Style x:Key="CaptionButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                </Trigger>
+                <Trigger Property="Tag" Value="hover">
+                    <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SurfaceSelectedBrush}" />
+                </Trigger>
+                <Trigger Property="Tag" Value="pressed">
+                    <Setter Property="Background" Value="{DynamicResource SurfaceSelectedBrush}" />
+                </Trigger>
+                <DataTrigger Binding="{Binding IsActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CaptionMaximizeButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+            <Setter Property="Content" Value="&#xE922;" />
+            <Setter Property="ToolTip" Value="{x:Static res:Strings.Main_Window_Maximize}" />
+            <Setter Property="AutomationProperties.Name" Value="{x:Static res:Strings.Main_Window_Maximize}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                    <Setter Property="Content" Value="&#xE923;" />
+                    <Setter Property="ToolTip" Value="{x:Static res:Strings.Main_Window_Restore}" />
+                    <Setter Property="AutomationProperties.Name" Value="{x:Static res:Strings.Main_Window_Restore}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Close turns red on hover, as it does everywhere in Windows. -->
+        <Style x:Key="CaptionCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#C42B1C" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#B0271A" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- The one filled button in the header: "open", blue with white text and icon. It uses the
+             strong accent - the chosen accent made dark enough for white - in every state. -->
+        <Style x:Key="ToolbarPrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Padding" Value="11,0,13,0" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AppFocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="{StaticResource RadiusSmall}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              RecognizesAccessKey="True"
+                                              SnapsToDevicePixels="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentStrongHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentStrongPressedBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- A toolbar button that shows a state (sidebar open, fit to width) in the accent. -->
+        <Style x:Key="ToolbarToggleStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="on">
+                    <Setter Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FilterChipStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+            <Setter Property="Padding" Value="11,3" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AppFocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd"
+                                Background="{DynamicResource SurfaceAltBrush}"
+                                BorderBrush="{DynamicResource BorderBrushSoft}"
+                                BorderThickness="1"
+                                CornerRadius="9"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="Cp"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              SnapsToDevicePixels="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                                <Setter TargetName="Cp" Property="TextElement.Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="Cp" Property="TextElement.Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Cp" Property="TextElement.Foreground" Value="{DynamicResource TextMutedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- The shared template wraps its items in a plain ScrollViewer that does not forward the
+             ScrollViewer.* attached properties, which switches virtualization off; this copy forwards
+             them, so a ten-thousand-entry outline stays as fast as a short one. -->
+        <Style x:Key="OutlineTreeStyle" TargetType="TreeView" BasedOn="{StaticResource AppTreeViewStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TreeView">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ScrollViewer Focusable="False"
+                                          Padding="0"
+                                          Style="{StaticResource AppScrollViewerStyle}"
+                                          CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter SnapsToDevicePixels="True" />
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- The sidebar's density: normal, or compact for more rows in sight (set from code). -->
+        <sys:Double x:Key="NavigatorRowHeight">32</sys:Double>
+        <Thickness x:Key="NavigatorRowPadding">6,3</Thickness>
+        <sys:Double x:Key="NavigatorFontSize">13</sys:Double>
+        <Thickness x:Key="ThumbnailRowPadding">0,8,0,6</Thickness>
+
+        <Style x:Key="OutlineItemStyle" TargetType="TreeViewItem" BasedOn="{StaticResource AppTreeViewItemStyle}">
+            <Setter Property="MinHeight" Value="{DynamicResource NavigatorRowHeight}" />
+            <Setter Property="Padding" Value="{DynamicResource NavigatorRowPadding}" />
+            <Setter Property="FontSize" Value="{DynamicResource NavigatorFontSize}" />
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+            <Setter Property="ToolTip" Value="{Binding Title}" />
+            <Setter Property="ToolTipService.InitialShowDelay" Value="900" />
+        </Style>
+
+        <Style x:Key="ThumbnailListStyle" TargetType="ListBox" BasedOn="{StaticResource AppListBoxStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ScrollViewer Focusable="False"
+                                          Padding="0"
+                                          Style="{StaticResource AppScrollViewerStyle}"
+                                          CanContentScroll="True"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter SnapsToDevicePixels="True" />
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ThumbnailItemStyle" TargetType="ListBoxItem">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="{DynamicResource ThumbnailRowPadding}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Margin="6,1" Padding="{TemplateBinding Padding}" Background="Transparent"
+                                CornerRadius="{StaticResource RadiusMedium}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceSelectedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- A recent document on the start page: a full-width row that lights on hover. -->
+        <Style x:Key="RecentRowStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource AppFocusVisual}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                                CornerRadius="{StaticResource RadiusMedium}" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceSelectedBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- The pin on a recent document's row: always there for a pinned one, on hover for the rest. -->
+        <Style x:Key="RecentPinButtonStyle" TargetType="Button" BasedOn="{StaticResource SubtleButtonStyle}">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Opacity" Value="0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Pinned, Mode=OneTime}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                </DataTrigger>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SearchNavButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+
+    </Window.Resources>
+
+    <Grid x:Name="RootGrid" Background="{DynamicResource BackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="HeaderRow" Height="44" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ============================================================
+             Title strip: document, search, toolbar, window buttons. It is
+             the window's caption too, so everything clickable in it opts
+             back in to the mouse.
+             ============================================================ -->
+        <Border x:Name="Header"
+                Grid.Row="0"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrushSoft}"
+                BorderThickness="0,0,0,1"
+                SnapsToDevicePixels="True">
+            <Grid x:Name="HeaderGrid" Margin="14,0,0,0" SizeChanged="OnHeaderSizeChanged">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="100*" MaxWidth="460" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel x:Name="BrandPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <views:AppIcon Width="24" Height="24" VerticalAlignment="Center" />
+                    <TextBlock x:Name="BrandTitle"
+                               Margin="9,0,0,0"
+                               MaxWidth="260"
+                               FontSize="{StaticResource FontSizeMedium}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"
+                               Text="{x:Static services:AppIdentity.Name}" />
+                </StackPanel>
+
+                <!-- Find in the document. The count and the previous/next buttons appear inside the box once there is something to find. -->
+                <Grid x:Name="SearchArea" Grid.Column="1" Margin="24,0,16,0" VerticalAlignment="Center"
+                      WindowChrome.IsHitTestVisibleInChrome="True" SizeChanged="OnSearchAreaSizeChanged">
+                    <!-- A short undo history: the box is also set from code, and every setting would be kept for ever. -->
+                    <TextBox x:Name="SearchBox" UndoLimit="32"
+                             Style="{StaticResource AppTextBoxStyle}"
+                             Padding="32,5,30,5"
+                             IsEnabled="False"
+                             AutomationProperties.Name="{x:Static res:Strings.Main_Search_Placeholder}"
+                             ToolTip="{x:Static res:Strings.Main_Search_Tooltip}"
+                             TextChanged="OnSearchTextChanged"
+                             PreviewKeyDown="OnSearchKeyDown" />
+
+                    <views:IconPath Width="14" Height="14" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Data="{StaticResource GeoSearch}" Foreground="{DynamicResource TextMutedBrush}" />
+
+                    <TextBlock x:Name="SearchPlaceholder"
+                               Text="{x:Static res:Strings.Main_Search_Placeholder}"
+                               Margin="34,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               IsHitTestVisible="False" />
+
+                    <StackPanel x:Name="SearchTools" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Margin="0,0,4,0" Visibility="Collapsed" SizeChanged="OnSearchToolsSizeChanged"
+                                IsVisibleChanged="OnSearchToolsVisibleChanged">
+                        <TextBlock x:Name="SearchStatus"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                        <Button Style="{StaticResource SearchNavButtonStyle}" Click="OnSearchPrevious"
+                                ToolTip="{x:Static res:Strings.Main_Search_Previous}" AutomationProperties.Name="{x:Static res:Strings.Main_Search_Previous}">
+                            <views:IconPath Width="11" Height="11" Data="{StaticResource GeoChevronUp}" StrokeThickness="2.2" />
+                        </Button>
+                        <Button Style="{StaticResource SearchNavButtonStyle}" Click="OnSearchNext"
+                                ToolTip="{x:Static res:Strings.Main_Search_Next}" AutomationProperties.Name="{x:Static res:Strings.Main_Search_Next}">
+                            <views:IconPath Width="11" Height="11" Data="{StaticResource GeoChevronDown}" StrokeThickness="2.2" />
+                        </Button>
+                        <Button Style="{StaticResource SearchNavButtonStyle}" Click="OnSearchClear"
+                                ToolTip="{x:Static res:Strings.Main_Search_Clear}" AutomationProperties.Name="{x:Static res:Strings.Main_Search_Clear}">
+                            <views:IconPath Width="10" Height="10" Data="{StaticResource GeoClose}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel x:Name="ToolbarPanel" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="OpenButton"
+                            Style="{StaticResource ToolbarPrimaryButtonStyle}"
+                            Margin="0,0,6,0"
+                            Click="OnOpenClick"
+                            AutomationProperties.Name="{x:Static res:Strings.Main_Open}"
+                            ToolTip="{x:Static res:Strings.Main_Open_Tooltip}">
+                        <StackPanel Orientation="Horizontal">
+                            <views:IconPath Width="14" Height="14" Margin="0,0,6,0" Data="{StaticResource GeoFolder}" />
+                            <TextBlock x:Name="OpenLabel" Text="{x:Static res:Strings.Main_Open}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border x:Name="ToolbarSeparator" Width="1" Height="20" Margin="6,0,8,0" Visibility="Collapsed"
+                            Background="{DynamicResource BorderBrushSoft}" SnapsToDevicePixels="True" />
+
+                    <StackPanel x:Name="DocumentTools" Orientation="Horizontal" IsEnabled="False" Visibility="Collapsed">
+                        <Button x:Name="SidebarButton"
+                                Style="{StaticResource ToolbarToggleStyle}"
+                                Padding="7,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnSidebarClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_Sidebar}"
+                                ToolTip="{x:Static res:Strings.Main_Sidebar_Tooltip}">
+                            <views:IconPath Width="15" Height="15" Data="{StaticResource GeoSidebar}" />
+                        </Button>
+
+                        <!-- Page number: type one and press Enter. -->
+                        <StackPanel x:Name="PagePanel" Orientation="Horizontal" Margin="6,0,6,0" VerticalAlignment="Center">
+                            <!-- No undo: the box follows every page turn, and each would be kept. -->
+                            <TextBox x:Name="PageBox" IsUndoEnabled="False"
+                                     Style="{StaticResource AppTextBoxStyle}"
+                                     Width="52"
+                                     MinHeight="28"
+                                     Padding="4,3"
+                                     TextAlignment="Center"
+                                     MaxLength="9"
+                                     AutomationProperties.Name="{x:Static res:Strings.Main_Page}"
+                                     ToolTip="{x:Static res:Strings.Main_Page_Tooltip}"
+                                     PreviewKeyDown="OnPageBoxKeyDown"
+                                     GotKeyboardFocus="OnPageBoxFocus"
+                                     LostKeyboardFocus="OnPageBoxLostFocus" />
+                            <TextBlock x:Name="PageCountText" Margin="7,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </StackPanel>
+
+                        <Button x:Name="ZoomOutButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Padding="7,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnZoomOutClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_ZoomOut}"
+                                ToolTip="{x:Static res:Strings.Main_ZoomOut_Tooltip}">
+                            <views:IconPath Width="13" Height="13" Data="{StaticResource GeoMinus}" StrokeThickness="2" />
+                        </Button>
+
+                        <Button x:Name="ZoomButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                MinWidth="64"
+                                Padding="6,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnZoomMenuClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_Zoom}"
+                                ToolTip="{x:Static res:Strings.Main_Zoom_Tooltip}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="ZoomText" Text="100%" VerticalAlignment="Center" />
+                                <views:IconPath Width="9" Height="9" Margin="5,1,0,0" VerticalAlignment="Center" Data="{StaticResource GeoChevronDown}" StrokeThickness="2.4" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="ZoomInButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Padding="7,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnZoomInClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_ZoomIn}"
+                                ToolTip="{x:Static res:Strings.Main_ZoomIn_Tooltip}">
+                            <views:IconPath Width="13" Height="13" Data="{StaticResource GeoPlus}" StrokeThickness="2" />
+                        </Button>
+
+                        <Button x:Name="FitButton"
+                                Style="{StaticResource ToolbarToggleStyle}"
+                                Margin="2,0,0,0"
+                                Padding="7,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnFitClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_FitWidth}"
+                                ToolTip="{x:Static res:Strings.Main_FitWidth_Tooltip}">
+                            <views:IconPath Width="15" Height="15" x:Name="FitIcon" Data="{StaticResource GeoFitWidth}" />
+                        </Button>
+
+                        <Button x:Name="PagesButton"
+                                Style="{StaticResource ToolbarToggleStyle}"
+                                Margin="2,0,0,0"
+                                Padding="7,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnPagesClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_PageDisplay}"
+                                ToolTip="{x:Static res:Strings.Main_PageDisplay_Tooltip}">
+                            <views:IconPath Width="16" Height="16" x:Name="PagesIcon" StrokeThickness="1.6" />
+                        </Button>
+
+                        <Button x:Name="RotateButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Padding="7,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnRotateClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_Rotate}"
+                                ToolTip="{x:Static res:Strings.Main_Rotate_Tooltip}">
+                            <views:IconPath Width="15" Height="15" Data="{StaticResource GeoRotate}" />
+                        </Button>
+
+                        <Button x:Name="PrintButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Padding="7,0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnPrintClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Main_Print}"
+                                ToolTip="{x:Static res:Strings.Main_Print_Tooltip}">
+                            <views:IconPath Width="15" Height="15" Data="{StaticResource GeoPrint}" />
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Everything else, and whatever the toolbar has no room for. -->
+                    <Button x:Name="MoreButton"
+                            Style="{StaticResource ToolbarButtonStyle}"
+                            Padding="7,0"
+                            HorizontalContentAlignment="Center"
+                            Click="OnMoreClick"
+                            AutomationProperties.Name="{x:Static res:Strings.Main_More}"
+                            ToolTip="{x:Static res:Strings.Main_More}">
+                        <views:IconPath Width="15" Height="15" Data="M5,12 L5.01,12 M12,12 L12.01,12 M19,12 L19.01,12" StrokeThickness="2.6" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel x:Name="CaptionButtons" Grid.Column="4" Orientation="Horizontal" Margin="12,0,0,0">
+                    <Button Style="{StaticResource CaptionButtonStyle}"
+                            Content="&#xE921;"
+                            ToolTip="{x:Static res:Strings.Main_Window_Minimize}"
+                            AutomationProperties.Name="{x:Static res:Strings.Main_Window_Minimize}"
+                            Click="OnMinimizeClick" />
+                    <Button x:Name="MaximizeButton" Style="{StaticResource CaptionMaximizeButtonStyle}" Click="OnMaximizeClick" />
+                    <Button Style="{StaticResource CaptionCloseButtonStyle}"
+                            Content="&#xE8BB;"
+                            ToolTip="{x:Static res:Strings.Main_Window_Close}"
+                            AutomationProperties.Name="{x:Static res:Strings.Main_Window_Close}"
+                            Click="OnCloseClick" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================
+             Body: outline and pages on the left, the document on the right
+             ============================================================ -->
+        <Grid x:Name="Body" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="SidebarColumn" Width="264" MinWidth="0" MaxWidth="560" />
+                <ColumnDefinition x:Name="SplitterColumn" Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="240" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ==================================================== sidebar -->
+            <Grid x:Name="Sidebar" Grid.Column="0" Background="{DynamicResource SurfaceBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="12,8,8,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <RadioButton x:Name="OutlineChip" Style="{StaticResource FilterChipStyle}" GroupName="SidebarMode"
+                                     Content="{x:Static res:Strings.Main_Sidebar_Outline}" Checked="OnSidebarModeChanged" />
+                        <RadioButton x:Name="PagesChip" Style="{StaticResource FilterChipStyle}" GroupName="SidebarMode"
+                                     Content="{x:Static res:Strings.Main_Sidebar_Pages}" Checked="OnSidebarModeChanged" />
+                    </StackPanel>
+                    <Button x:Name="CompactButton" Grid.Column="1"
+                            Style="{StaticResource ToolbarToggleStyle}"
+                            Width="28" Height="28" MinHeight="0" Padding="0"
+                            HorizontalContentAlignment="Center"
+                            Click="OnCompactClick"
+                            AutomationProperties.Name="{x:Static res:Strings.Main_Sidebar_Compact}"
+                            ToolTip="{x:Static res:Strings.Main_Sidebar_Compact_Tooltip}">
+                        <views:IconPath Width="14" Height="14" Data="{StaticResource GeoCompact}" />
+                    </Button>
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <TreeView x:Name="OutlineTree"
+                              Style="{StaticResource OutlineTreeStyle}"
+                              Margin="6,0,4,0"
+                              ItemContainerStyle="{StaticResource OutlineItemStyle}"
+                              VirtualizingStackPanel.IsVirtualizing="True"
+                              VirtualizingStackPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True"
+                              PreviewMouseLeftButtonUp="OnOutlineClick"
+                              KeyDown="OnOutlineKeyDown">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding ChildrenView, Mode=OneTime}" ItemContainerStyle="{StaticResource OutlineItemStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding PageLabel}" Margin="10,0,4,0" VerticalAlignment="Center"
+                                               FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" />
+                                </Grid>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+
+                    <ListBox x:Name="ThumbnailList"
+                             Style="{StaticResource ThumbnailListStyle}"
+                             ItemContainerStyle="{StaticResource ThumbnailItemStyle}"
+                             Visibility="Collapsed"
+                             VirtualizingStackPanel.IsVirtualizing="True"
+                             VirtualizingStackPanel.VirtualizationMode="Recycling"
+                             VirtualizingStackPanel.ScrollUnit="Pixel"
+                             ScrollViewer.CanContentScroll="True"
+                             SelectionMode="Single"
+                             PreviewMouseLeftButtonUp="OnThumbnailClick"
+                             KeyDown="OnThumbnailKeyDown">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <views:ThumbnailImage Source="{Binding Source, Mode=OneTime}" PageIndex="{Binding Index, Mode=OneTime}"
+                                                          Width="{Binding Width, Mode=OneTime}" Height="{Binding Height, Mode=OneTime}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="{Binding Label, Mode=OneTime}" Margin="0,5,0,0" HorizontalAlignment="Center"
+                                               FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock x:Name="OutlineEmpty"
+                               Margin="24,40,24,0"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               Text="{x:Static res:Strings.Main_Outline_Empty}"
+                               Visibility="Collapsed" />
+                </Grid>
+
+                <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="0,1,0,0" Padding="14,7" SnapsToDevicePixels="True">
+                    <TextBlock x:Name="SidebarSummary" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"
+                               TextTrimming="CharacterEllipsis" />
+                </Border>
+            </Grid>
+
+            <GridSplitter x:Name="SidebarSplitter"
+                          Grid.Column="1"
+                          Width="4"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Background="{DynamicResource BorderBrushSoft}"
+                          ShowsPreview="False"
+                          ResizeBehavior="PreviousAndNext"
+                          ResizeDirection="Columns"
+                          FocusVisualStyle="{x:Null}"
+                          DragCompleted="OnSplitterDragCompleted" />
+
+            <!-- =========================================== document -->
+            <Grid x:Name="ViewerArea" Grid.Column="2">
+                <ScrollViewer x:Name="ViewerScroller"
+                              Style="{StaticResource AppScrollViewerStyle}"
+                              CanContentScroll="True"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              Focusable="False">
+                    <viewer:PdfView x:Name="View" Background="{DynamicResource BackgroundBrush}" />
+                </ScrollViewer>
+
+                <!-- Where a link goes, while the pointer is on it - as a browser shows it. -->
+                <Border x:Name="StatusPill"
+                        Style="{StaticResource StatusPillStyle}"
+                        Margin="12,0,12,12"
+                        Padding="10,4"
+                        CornerRadius="{StaticResource RadiusMedium}"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        MaxWidth="720"
+                        IsHitTestVisible="False"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <views:IconPath x:Name="StatusIcon" Width="12" Height="12" Margin="0,0,7,0" VerticalAlignment="Center" Data="{StaticResource GeoLink}" StrokeThickness="2" Foreground="{DynamicResource TextSecondaryBrush}" />
+                        <TextBlock x:Name="StatusText" VerticalAlignment="Center" FontSize="{StaticResource FontSizeSmall}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+
+                <!-- The trail of jumps: back to where a link was followed from - or further - and forward again. -->
+                <Border x:Name="TrailBar"
+                        Style="{StaticResource StatusPillStyle}"
+                        Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrushStrong}"
+                        Margin="12,10,12,0"
+                        Padding="3"
+                        CornerRadius="{StaticResource RadiusMedium}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="TrailBackButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Focusable="False" MinHeight="26" Width="30" Padding="0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnTrailBackClick"
+                                AutomationProperties.Name="{x:Static res:Strings.View_Back}">
+                            <views:IconPath Width="14" Height="14" Data="{StaticResource GeoBack}" StrokeThickness="2" />
+                        </Button>
+                        <StackPanel x:Name="TrailChips" Orientation="Horizontal" VerticalAlignment="Center" Margin="2,0" />
+                        <Button x:Name="TrailForwardButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Focusable="False" MinHeight="26" Width="30" Padding="0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnTrailForwardClick"
+                                AutomationProperties.Name="{x:Static res:Strings.View_Forward}">
+                            <views:IconPath Width="14" Height="14" Data="{StaticResource GeoForward}" StrokeThickness="2" />
+                        </Button>
+                        <Border Width="1" Margin="3,6" Background="{DynamicResource BorderBrushSoft}" />
+                        <Button x:Name="TrailCloseButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                Focusable="False" MinHeight="26" Width="26" Padding="0"
+                                HorizontalContentAlignment="Center"
+                                Click="OnTrailCloseClick"
+                                AutomationProperties.Name="{x:Static res:Strings.Trail_Hide}"
+                                ToolTip="{x:Static res:Strings.Trail_Hide_Tooltip}">
+                            <views:IconPath Width="10" Height="10" Data="{StaticResource GeoClose}" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- One page at a time: which page this is, for a moment after each turn, and how far through. -->
+                <Border x:Name="PageIndicator"
+                        Style="{StaticResource StatusPillStyle}"
+                        Margin="0,0,0,28"
+                        Padding="20,10,20,12"
+                        CornerRadius="{StaticResource RadiusMedium}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        IsHitTestVisible="False"
+                        Opacity="0"
+                        Visibility="Collapsed">
+                    <StackPanel MinWidth="112">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock x:Name="PageIndicatorNumber" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Bottom"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <TextBlock x:Name="PageIndicatorTotal" Margin="7,0,0,5" VerticalAlignment="Bottom" FontSize="{StaticResource FontSizeSmall}"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                        </StackPanel>
+                        <Grid Margin="0,8,0,0" Height="3">
+                            <Border Background="{DynamicResource SurfaceHoverBrush}" CornerRadius="1.5" />
+                            <Border x:Name="PageIndicatorProgress" Background="{DynamicResource AccentBrush}" CornerRadius="1.5" RenderTransformOrigin="0,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="PageIndicatorScale" ScaleX="0" />
+                                </Border.RenderTransform>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock x:Name="LoadingText"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="{StaticResource FontSizeMedium}"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           Text="{x:Static res:Strings.Main_Opening}"
+                           Visibility="Collapsed" />
+
+                <!-- ====================================== start page -->
+                <Grid x:Name="StartPage" Background="{DynamicResource BackgroundBrush}" Visibility="Collapsed">
+                    <ScrollViewer Style="{StaticResource AppScrollViewerStyle}" VerticalScrollBarVisibility="Auto">
+                        <StackPanel MaxWidth="560" Margin="24,56,24,32" HorizontalAlignment="Center">
+                            <views:AppIcon Width="56" Height="56" HorizontalAlignment="Center" />
+                            <TextBlock Text="{x:Static services:AppIdentity.Name}"
+                                       Margin="0,16,0,0"
+                                       HorizontalAlignment="Center"
+                                       FontSize="{StaticResource FontSizeLarge}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <TextBlock Text="{x:Static res:Strings.Main_Empty_Hint}"
+                                       Margin="0,6,0,0"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}"
+                                    Margin="0,20,0,0"
+                                    MinWidth="160"
+                                    HorizontalAlignment="Center"
+                                    Content="{x:Static res:Strings.Main_OpenPdf}"
+                                    Click="OnOpenClick" />
+
+                            <Border x:Name="RecentCard" Style="{StaticResource CardBorderStyle}" Margin="0,36,0,0" Padding="6">
+                                <StackPanel>
+                                    <Grid Margin="12,8,6,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource SectionHeaderStyle}" Margin="0" VerticalAlignment="Center"
+                                                   Text="{x:Static res:Strings.Main_Recent_Header}" />
+                                        <Button x:Name="ClearRecentButton" Grid.Column="1" Style="{StaticResource SubtleButtonStyle}" MinHeight="24" Padding="8,0"
+                                                FontSize="{StaticResource FontSizeSmall}" Content="{x:Static res:Strings.Main_Recent_Clear}"
+                                                ToolTip="{x:Static res:Strings.Main_Recent_Clear_Tooltip}"
+                                                Click="OnClearRecentClick" />
+                                    </Grid>
+                                    <ItemsControl x:Name="RecentList" Focusable="False">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource RecentRowStyle}" Tag="{Binding Path, Mode=OneTime}" Click="OnRecentClick"
+                                                        ToolTip="{Binding Path, Mode=OneTime}" Padding="12,6,6,6">
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu>
+                                                            <MenuItem Header="{Binding PinText, Mode=OneTime}" Tag="{Binding Path, Mode=OneTime}" Click="OnRecentPinClick" />
+                                                            <MenuItem Header="{x:Static res:Strings.Main_Recent_Remove}" Tag="{Binding Path, Mode=OneTime}" Click="OnRecentRemoveClick" />
+                                                        </ContextMenu>
+                                                    </Button.ContextMenu>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <views:IconPath Width="16" Height="16" Margin="0,0,12,0" VerticalAlignment="Center" Data="{StaticResource GeoDocument}"
+                                                                        Foreground="{DynamicResource AccentBrush}" Opacity="{Binding Fade, Mode=OneTime}" />
+                                                        <StackPanel Grid.Column="1" Opacity="{Binding Fade, Mode=OneTime}">
+                                                            <TextBlock Text="{Binding Name, Mode=OneTime}" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                            <TextBlock Text="{Binding Folder, Mode=OneTime}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"
+                                                                       FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" />
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="2" Text="{Binding When, Mode=OneTime}" Margin="12,0,0,0" VerticalAlignment="Center"
+                                                                   FontSize="{StaticResource FontSizeSmall}">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsAway, Mode=OneTime}" Value="True">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <Button Grid.Column="3" Style="{StaticResource RecentPinButtonStyle}" Margin="8,0,0,0" Tag="{Binding Path, Mode=OneTime}"
+                                                                Click="OnRecentPinClick" ToolTip="{Binding PinText, Mode=OneTime}" AutomationProperties.Name="{Binding PinText, Mode=OneTime}">
+                                                            <views:IconPath Width="14" Height="14" Data="{StaticResource GeoPin}" StrokeThickness="1.8">
+                                                                <views:IconPath.Style>
+                                                                    <Style TargetType="views:IconPath">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Pinned, Mode=OneTime}" Value="True">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </views:IconPath.Style>
+                                                            </views:IconPath>
+                                                        </Button>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- Shown while a file is dragged over the window. -->
+                <Border x:Name="DropHint"
+                        Margin="12"
+                        BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="2"
+                        CornerRadius="{StaticResource RadiusLarge}"
+                        Background="{DynamicResource AccentSubtleBrush}"
+                        Opacity="0.92"
+                        IsHitTestVisible="False"
+                        Visibility="Collapsed">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{StaticResource FontSizeLarge}"
+                               FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Text="{x:Static res:Strings.Main_DropHint}" />
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

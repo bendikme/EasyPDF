@@ -1,0 +1,140 @@
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+
+namespace EasyPDF.Services;
+
+/// <summary>
+/// Tiny asynchronous file logger. Writes are queued and flushed on a background thread so
+/// nothing on the UI path ever touches the disk.
+/// </summary>
+public static class AppLog
+{
+    private static readonly System.Collections.Concurrent.BlockingCollection<string> Queue = new(4096);
+    private static readonly Lazy<Thread> Writer = new(StartWriter);
+    private static string _logPath = string.Empty;
+    private static volatile bool _enabled = true;
+
+    /// <summary>Directory holding the application's data (settings and the log).</summary>
+    public static string DataDirectory { get; } = ResolveDataDirectory();
+
+    public static string LogPath => _logPath;
+
+    /// <summary>
+    /// EASYPDF_DATA puts settings and the log elsewhere: a portable copy on a stick, or a test that
+    /// must not touch the user's own. The folder is made only once something is written to it.
+    /// </summary>
+    private static string ResolveDataDirectory() =>
+        Environment.GetEnvironmentVariable("EASYPDF_DATA") is { Length: > 0 } custom
+            ? custom
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EasyPDF");
+
+    private static Thread StartWriter()
+    {
+        _logPath = Path.Combine(DataDirectory, "easypdf.log");
+        try
+        {
+            Directory.CreateDirectory(DataDirectory);
+        }
+        catch
+        {
+            // Nowhere to write: the lines are dropped (each write fails quietly).
+        }
+        TrimIfLarge();
+
+        var t = new Thread(WriterLoop)
+        {
+            IsBackground = true,
+            Name = "EasyPDF.Log",
+            Priority = ThreadPriority.BelowNormal,
+        };
+        t.Start();
+        return t;
+    }
+
+    private static void TrimIfLarge()
+    {
+        try
+        {
+            var fi = new FileInfo(_logPath);
+            if (fi.Exists && fi.Length > 2 * 1024 * 1024)
+            {
+                var backup = _logPath + ".1";
+                File.Delete(backup);
+                File.Move(_logPath, backup);
+            }
+        }
+        catch
+        {
+            // Logging must never throw.
+        }
+    }
+
+    private static void WriterLoop()
+    {
+        var buffer = new StringBuilder(8192);
+        foreach (var line in Queue.GetConsumingEnumerable())
+        {
+            buffer.Clear();
+            buffer.AppendLine(line);
+
+            // Drain anything else already queued so bursts cost one write.
+            while (buffer.Length < 32768 && Queue.TryTake(out var more))
+                buffer.AppendLine(more);
+
+            try
+            {
+                File.AppendAllText(_logPath, buffer.ToString(), Encoding.UTF8);
+            }
+            catch
+            {
+                // Disk problems must not take the app down.
+            }
+        }
+    }
+
+    private static void Write(string level, string message, Exception? ex)
+    {
+        if (!_enabled) return;
+
+        var line = ex is null
+            ? $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} [{level}] {message}"
+            // ToString, not Message and StackTrace: it includes every inner exception, which is where
+            // the real cause of a wrapped failure - a missing DLL behind a type initializer - lives.
+            : $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} [{level}] {message} :: {ex}";
+
+        Debug.WriteLine(line);
+
+        try
+        {
+            _ = Writer.Value;
+            Queue.TryAdd(line, 0);
+        }
+        catch
+        {
+            // Queue full or shutting down - drop the line rather than block a caller.
+        }
+    }
+
+    public static void Info(string message) => Write("INF", message, null);
+
+    public static void Warn(string message, Exception? ex = null) => Write("WRN", message, ex);
+
+    public static void Error(string message, Exception? ex = null) => Write("ERR", message, ex);
+
+    public static void Debug_(string message) => Write("DBG", message, null);
+
+    /// <summary>Stops accepting new entries (called during shutdown).</summary>
+    public static void Shutdown()
+    {
+        _enabled = false;
+        try
+        {
+            Queue.CompleteAdding();
+        }
+        catch
+        {
+            // Already completed.
+        }
+    }
+}

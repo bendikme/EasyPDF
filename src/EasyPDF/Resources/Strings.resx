@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Error_Title" xml:space="preserve">
+    <value>Something went wrong</value>
+  </data>
+  <data name="App_Error" xml:space="preserve">
+    <value>EasyPDF ran into a problem and carried on: {0}
+
+The details are in {1}.</value>
+  </data>
+  <data name="Common_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Main_Window_Minimize" xml:space="preserve">
+    <value>Minimize</value>
+  </data>
+  <data name="Main_Window_Maximize" xml:space="preserve">
+    <value>Maximize</value>
+  </data>
+  <data name="Main_Window_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="Main_Window_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Main_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Main_Open_Tooltip" xml:space="preserve">
+    <value>Open a PDF (Ctrl+O)</value>
+  </data>
+  <data name="Main_OpenPdf" xml:space="preserve">
+    <value>Open PDF</value>
+  </data>
+  <data name="Main_Opening" xml:space="preserve">
+    <value>Opening…</value>
+  </data>
+  <data name="Main_Empty_Hint" xml:space="preserve">
+    <value>Open a PDF, or drop one here.</value>
+  </data>
+  <data name="Main_DropHint" xml:space="preserve">
+    <value>Drop to open</value>
+  </data>
+  <data name="Main_Recent_Header" xml:space="preserve">
+    <value>RECENT</value>
+  </data>
+  <data name="Main_Recent_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Main_Recent_Remove" xml:space="preserve">
+    <value>Remove from list</value>
+  </data>
+  <data name="Main_Recent_Clear_Tooltip" xml:space="preserve">
+    <value>Empty the list. Pinned files stay.</value>
+  </data>
+  <data name="Main_Recent_Pin" xml:space="preserve">
+    <value>Pin to the list</value>
+  </data>
+  <data name="Main_Recent_Unpin" xml:space="preserve">
+    <value>Unpin from the list</value>
+  </data>
+  <data name="Main_Recent_Missing" xml:space="preserve">
+    <value>Not found</value>
+  </data>
+  <data name="Main_Recent_Unavailable" xml:space="preserve">
+    <value>Not available</value>
+  </data>
+  <data name="Main_Continuous" xml:space="preserve">
+    <value>Continuous</value>
+  </data>
+  <data name="Main_SinglePage" xml:space="preserve">
+    <value>One page at a time</value>
+  </data>
+  <data name="Main_PageDisplay" xml:space="preserve">
+    <value>Page display</value>
+  </data>
+  <data name="Main_PageDisplay_Tooltip" xml:space="preserve">
+    <value>Continuous, or a fixed number of pages at a time</value>
+  </data>
+  <data name="Grid_TwoPages" xml:space="preserve">
+    <value>Two pages side by side</value>
+  </data>
+  <data name="Grid_TwoPagesCover" xml:space="preserve">
+    <value>Two pages, cover alone</value>
+  </data>
+  <data name="Grid_TwoStacked" xml:space="preserve">
+    <value>Two pages, one above the other</value>
+  </data>
+  <data name="Grid_Four" xml:space="preserve">
+    <value>Four pages (2 × 2)</value>
+  </data>
+  <data name="Grid_Six" xml:space="preserve">
+    <value>Six pages (3 × 2)</value>
+  </data>
+  <data name="Grid_Nine" xml:space="preserve">
+    <value>Nine pages (3 × 3)</value>
+  </data>
+  <data name="Grid_Other" xml:space="preserve">
+    <value>Other grid</value>
+  </data>
+  <data name="Grid_Size" xml:space="preserve">
+    <value>{0} × {1}</value>
+  </data>
+  <data name="Grid_SizeCover" xml:space="preserve">
+    <value>{0} × {1}, cover alone</value>
+  </data>
+  <data name="Grid_Pages" xml:space="preserve">
+    <value>{0}: {1} pages at a time</value>
+  </data>
+  <data name="Grid_Point" xml:space="preserve">
+    <value>Point to choose columns and rows</value>
+  </data>
+  <data name="Trail_Hide" xml:space="preserve">
+    <value>Hide the trail</value>
+  </data>
+  <data name="Trail_Hide_Tooltip" xml:space="preserve">
+    <value>Hide until the next jump. Alt+Left still goes back.</value>
+  </data>
+  <data name="Trail_BackTo" xml:space="preserve">
+    <value>Back to page {0} (Alt+Left)</value>
+  </data>
+  <data name="Trail_ForwardTo" xml:space="preserve">
+    <value>Forward to page {0} (Alt+Right)</value>
+  </data>
+  <data name="Trail_Page" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
+  <data name="Trail_Here" xml:space="preserve">
+    <value>You are here</value>
+  </data>
+  <data name="Trail_OneBack" xml:space="preserve">
+    <value>One step back (Alt+Left)</value>
+  </data>
+  <data name="Trail_OneForward" xml:space="preserve">
+    <value>One step forward (Alt+Right)</value>
+  </data>
+  <data name="Trail_StepsBack" xml:space="preserve">
+    <value>{0} steps back</value>
+  </data>
+  <data name="Trail_StepsForward" xml:space="preserve">
+    <value>{0} steps forward</value>
+  </data>
+  <data name="Trail_More" xml:space="preserve">
+    <value>{0} more places</value>
+  </data>
+  <data name="More_Recent" xml:space="preserve">
+    <value>Recent files</value>
+  </data>
+  <data name="Main_Sidebar_Compact" xml:space="preserve">
+    <value>Compact list</value>
+  </data>
+  <data name="Main_Sidebar_Compact_Tooltip" xml:space="preserve">
+    <value>Smaller rows and thumbnails, so more fit</value>
+  </data>
+  <data name="More_Recent_None" xml:space="preserve">
+    <value>No recent files</value>
+  </data>
+  <data name="More_ClearRecent" xml:space="preserve">
+    <value>Clear recent files</value>
+  </data>
+  <data name="Main_Search_Placeholder" xml:space="preserve">
+    <value>Search in document</value>
+  </data>
+  <data name="Main_Search_Tooltip" xml:space="preserve">
+    <value>Find text in the document (Ctrl+F). Enter finds the next match, Shift+Enter the previous one.</value>
+  </data>
+  <data name="Main_Search_Next" xml:space="preserve">
+    <value>Next match (F3)</value>
+  </data>
+  <data name="Main_Search_Previous" xml:space="preserve">
+    <value>Previous match (Shift+F3)</value>
+  </data>
+  <data name="Main_Search_Clear" xml:space="preserve">
+    <value>Clear search (Esc)</value>
+  </data>
+  <data name="Main_Search_Searching" xml:space="preserve">
+    <value>Searching…</value>
+  </data>
+  <data name="Main_Search_None" xml:space="preserve">
+    <value>No matches</value>
+  </data>
+  <data name="Main_Search_Count" xml:space="preserve">
+    <value>{0} of {1}{2}</value>
+  </data>
+  <data name="Main_Sidebar" xml:space="preserve">
+    <value>Sidebar</value>
+  </data>
+  <data name="Main_Sidebar_Tooltip" xml:space="preserve">
+    <value>Show or hide the outline and pages (F4)</value>
+  </data>
+  <data name="Main_Sidebar_Outline" xml:space="preserve">
+    <value>Outline</value>
+  </data>
+  <data name="Main_Sidebar_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="Main_Sidebar_Summary" xml:space="preserve">
+    <value>Page {0} of {1} · {2}</value>
+  </data>
+  <data name="Main_Outline_Empty" xml:space="preserve">
+    <value>This document has no outline.</value>
+  </data>
+  <data name="Main_Page" xml:space="preserve">
+    <value>Page number</value>
+  </data>
+  <data name="Main_Page_Tooltip" xml:space="preserve">
+    <value>Type a page number and press Enter (Ctrl+G)</value>
+  </data>
+  <data name="Main_PageOf" xml:space="preserve">
+    <value>of {0}</value>
+  </data>
+  <data name="Main_Zoom" xml:space="preserve">
+    <value>Zoom</value>
+  </data>
+  <data name="Main_Zoom_Tooltip" xml:space="preserve">
+    <value>Choose a zoom level</value>
+  </data>
+  <data name="Main_ZoomIn" xml:space="preserve">
+    <value>Zoom in</value>
+  </data>
+  <data name="Main_ZoomIn_Tooltip" xml:space="preserve">
+    <value>Zoom in (Ctrl++ or Ctrl+scroll)</value>
+  </data>
+  <data name="Main_ZoomOut" xml:space="preserve">
+    <value>Zoom out</value>
+  </data>
+  <data name="Main_ZoomOut_Tooltip" xml:space="preserve">
+    <value>Zoom out (Ctrl+-)</value>
+  </data>
+  <data name="Main_FitWidth" xml:space="preserve">
+    <value>Fit to width</value>
+  </data>
+  <data name="Main_FitWidth_Tooltip" xml:space="preserve">
+    <value>Fit the pages to the width of the window, or whole pages to it (Ctrl+2, Ctrl+0)</value>
+  </data>
+  <data name="Main_FitPage" xml:space="preserve">
+    <value>Fit whole page</value>
+  </data>
+  <data name="Main_Rotate" xml:space="preserve">
+    <value>Rotate</value>
+  </data>
+  <data name="Main_Rotate_Tooltip" xml:space="preserve">
+    <value>Rotate the pages clockwise (Ctrl+Shift++)</value>
+  </data>
+  <data name="Main_Print" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="Main_Print_Tooltip" xml:space="preserve">
+    <value>Print (Ctrl+P)</value>
+  </data>
+  <data name="Main_More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Main_Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="More_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="More_Forward" xml:space="preserve">
+    <value>Forward</value>
+  </data>
+  <data name="More_RotateLeft" xml:space="preserve">
+    <value>Rotate counterclockwise</value>
+  </data>
+  <data name="More_FullScreen" xml:space="preserve">
+    <value>Full screen</value>
+  </data>
+  <data name="More_MatchCase" xml:space="preserve">
+    <value>Match case</value>
+  </data>
+  <data name="More_WholeWords" xml:space="preserve">
+    <value>Whole words only</value>
+  </data>
+  <data name="More_NewWindow" xml:space="preserve">
+    <value>New window</value>
+  </data>
+  <data name="More_Reload" xml:space="preserve">
+    <value>Reload</value>
+  </data>
+  <data name="More_ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="More_Properties" xml:space="preserve">
+    <value>Document properties</value>
+  </data>
+  <data name="More_CloseDocument" xml:space="preserve">
+    <value>Close document</value>
+  </data>
+  <data name="More_CloseWindow" xml:space="preserve">
+    <value>Close window</value>
+  </data>
+  <data name="View_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="View_CopyLink" xml:space="preserve">
+    <value>Copy link address</value>
+  </data>
+  <data name="View_CopyLinkPage" xml:space="preserve">
+    <value>Copy link target</value>
+  </data>
+  <data name="View_SelectAll" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="View_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="View_Forward" xml:space="preserve">
+    <value>Forward</value>
+  </data>
+  <data name="View_LinkPage" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
+  <data name="View_Action_NextPage" xml:space="preserve">
+    <value>Next page</value>
+  </data>
+  <data name="View_Action_PrevPage" xml:space="preserve">
+    <value>Previous page</value>
+  </data>
+  <data name="View_Action_FirstPage" xml:space="preserve">
+    <value>First page</value>
+  </data>
+  <data name="View_Action_LastPage" xml:space="preserve">
+    <value>Last page</value>
+  </data>
+  <data name="View_Action_GoToPage" xml:space="preserve">
+    <value>Go to page</value>
+  </data>
+  <data name="View_Action_Find" xml:space="preserve">
+    <value>Find</value>
+  </data>
+  <data name="Open_Dialog_Title" xml:space="preserve">
+    <value>Open PDF</value>
+  </data>
+  <data name="Open_Filter_Pdf" xml:space="preserve">
+    <value>PDF documents (*.pdf)</value>
+  </data>
+  <data name="Open_Filter_All" xml:space="preserve">
+    <value>All files (*.*)</value>
+  </data>
+  <data name="Open_Failed_Title" xml:space="preserve">
+    <value>The document could not be opened</value>
+  </data>
+  <data name="Open_NotFound" xml:space="preserve">
+    <value>{0} could not be found. It may have been moved, renamed or deleted.</value>
+  </data>
+  <data name="Open_AccessDenied" xml:space="preserve">
+    <value>{0} could not be read. Another program may be holding it, or you may not have permission to open it.</value>
+  </data>
+  <data name="Open_NotPdf" xml:space="preserve">
+    <value>{0} is not a PDF document.</value>
+  </data>
+  <data name="Open_Damaged" xml:space="preserve">
+    <value>{0} is damaged and cannot be read. If it is still being downloaded or written, try again when it is done.</value>
+  </data>
+  <data name="Open_UnsupportedSecurity" xml:space="preserve">
+    <value>{0} is protected in a way EasyPDF cannot open (for example with a certificate or DRM).</value>
+  </data>
+  <data name="Open_Empty" xml:space="preserve">
+    <value>{0} is empty.</value>
+  </data>
+  <data name="Open_Unknown" xml:space="preserve">
+    <value>{0} could not be opened: {1}</value>
+  </data>
+  <data name="Reload_Failed_Title" xml:space="preserve">
+    <value>The document could not be reloaded</value>
+  </data>
+  <data name="Password_Title" xml:space="preserve">
+    <value>Password required</value>
+  </data>
+  <data name="Password_Prompt" xml:space="preserve">
+    <value>{0} is protected. Enter its password to open it.</value>
+  </data>
+  <data name="Password_Wrong" xml:space="preserve">
+    <value>That password is not correct. Try again.</value>
+  </data>
+  <data name="Password_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Link_Confirm_Title" xml:space="preserve">
+    <value>Open this from the document?</value>
+  </data>
+  <data name="Link_Confirm_Message" xml:space="preserve">
+    <value>A link in this document wants to open the following. Only continue if you trust the document and recognise where it leads.</value>
+  </data>
+  <data name="Link_Confirm_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Link_Failed_Title" xml:space="preserve">
+    <value>The link could not be followed</value>
+  </data>
+  <data name="Link_Failed" xml:space="preserve">
+    <value>Windows could not open {0}.</value>
+  </data>
+  <data name="Link_Missing" xml:space="preserve">
+    <value>The link points to {0}, which does not exist.</value>
+  </data>
+  <data name="Link_Refused_Title" xml:space="preserve">
+    <value>This link was not opened</value>
+  </data>
+  <data name="Link_Refused" xml:space="preserve">
+    <value>The link would run a program or a script ({0}). EasyPDF never runs programs from a document.</value>
+  </data>
+  <data name="Print_Progress" xml:space="preserve">
+    <value>Printing page {0} of {1}…</value>
+  </data>
+  <data name="Print_Done" xml:space="preserve">
+    <value>Sent to the printer</value>
+  </data>
+  <data name="Print_Failed_Title" xml:space="preserve">
+    <value>Printing failed</value>
+  </data>
+  <data name="Print_Failed" xml:space="preserve">
+    <value>The document could not be printed: {0}</value>
+  </data>
+  <data name="Print_PageFailed" xml:space="preserve">
+    <value>Page {0} could not be printed, so printing stopped.</value>
+  </data>
+  <data name="Properties_Title" xml:space="preserve">
+    <value>Document properties</value>
+  </data>
+  <data name="Properties_File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Properties_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Properties_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Properties_SizeBytes" xml:space="preserve">
+    <value>{0} ({1:N0} bytes)</value>
+  </data>
+  <data name="Properties_Pages" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="Properties_PageSize" xml:space="preserve">
+    <value>Page size</value>
+  </data>
+  <data name="Properties_PageSizeValue" xml:space="preserve">
+    <value>{0:0} × {1:0} mm ({2:0.##} × {3:0.##} in)</value>
+  </data>
+  <data name="Properties_Version" xml:space="preserve">
+    <value>PDF version</value>
+  </data>
+  <data name="Properties_DocTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Properties_Author" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="Properties_Subject" xml:space="preserve">
+    <value>Subject</value>
+  </data>
+  <data name="Properties_Keywords" xml:space="preserve">
+    <value>Keywords</value>
+  </data>
+  <data name="Properties_Creator" xml:space="preserve">
+    <value>Created with</value>
+  </data>
+  <data name="Properties_Producer" xml:space="preserve">
+    <value>PDF producer</value>
+  </data>
+  <data name="Properties_Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Properties_Modified" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="Properties_Encrypted" xml:space="preserve">
+    <value>Encrypted</value>
+  </data>
+  <data name="Properties_Form" xml:space="preserve">
+    <value>Has form fields</value>
+  </data>
+  <data name="Size_Bytes" xml:space="preserve">
+    <value>{0} bytes</value>
+  </data>
+  <data name="Size_KB" xml:space="preserve">
+    <value>{0:0.#} KB</value>
+  </data>
+  <data name="Size_MB" xml:space="preserve">
+    <value>{0:0.#} MB</value>
+  </data>
+  <data name="Size_GB" xml:space="preserve">
+    <value>{0:0.##} GB</value>
+  </data>
+  <data name="Time_JustNow" xml:space="preserve">
+    <value>Just now</value>
+  </data>
+  <data name="Time_MinuteAgo" xml:space="preserve">
+    <value>{0} minute ago</value>
+  </data>
+  <data name="Time_MinutesAgo" xml:space="preserve">
+    <value>{0} minutes ago</value>
+  </data>
+  <data name="Time_TodayAt" xml:space="preserve">
+    <value>Today {0}</value>
+  </data>
+  <data name="Time_YesterdayAt" xml:space="preserve">
+    <value>Yesterday {0}</value>
+  </data>
+  <data name="Time_DateFormat" xml:space="preserve">
+    <value>MMM d</value>
+  </data>
+  <data name="Time_DateYearFormat" xml:space="preserve">
+    <value>MMM d, yyyy</value>
+  </data>
+</root>

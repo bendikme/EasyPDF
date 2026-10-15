@@ -1,0 +1,99 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- WinForms is referenced only for printing (PrintDialog / PrintDocument). Its assembly is
+         loaded the first time something prints, never at start-up. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>EasyPDF</RootNamespace>
+    <AssemblyName>EasyPDF</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon Condition="Exists('Assets\easypdf.ico')">Assets\easypdf.ico</ApplicationIcon>
+    <StartupObject>EasyPDF.Program</StartupObject>
+
+    <!-- pdfium.dll is native x64 code, so the process is too. -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <SelfContained>false</SelfContained>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SatelliteResourceLanguages>en;nb</SatelliteResourceLanguages>
+
+    <!-- Start-up and memory. ReadyToRun takes the JIT off the start-up path; PGO tunes the hot
+         rendering loops once they are running. Workstation GC with conserve-memory keeps the
+         heap small, since a viewer is mostly waiting for the user. -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredPGO>true</TieredPGO>
+    <TieredCompilationQuickJitForLoops>true</TieredCompilationQuickJitForLoops>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <UseSystemResourceKeys>false</UseSystemResourceKeys>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CA1416;WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+    <RuntimeHostConfigurationOption Include="System.GC.RetainVM" Value="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Google's PDF engine (the one in Chrome), prebuilt by bblanchon/pdfium-binaries:
+         BSD-3-Clause, no V8 and no XFA, so it runs no document JavaScript. -->
+    <PackageReference Include="bblanchon.PDFium.Win32" Version="157.0.8086" />
+  </ItemGroup>
+
+  <!-- WinForms' implicit global using collides with WPF on Application, MessageBox, Clipboard,
+       Point, Size, Color and more, so WinForms types are always written out in full. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <!-- Licences travel with the binaries they cover: PDFium's (and its libraries') and Roboto's. -->
+  <ItemGroup>
+    <None Update="Assets\Fonts\OFL.txt">
+      <Link>licenses\Roboto-OFL.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ThirdParty\PDFium\*.*">
+      <Link>licenses\PDFium\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ThirdParty\README.md">
+      <Link>licenses\README.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Roboto is compiled into the assembly so the UI looks the same on machines without it. -->
+  <ItemGroup>
+    <None Remove="Assets\Fonts\*.ttf" />
+    <Resource Include="Assets\Fonts\*.ttf" />
+  </ItemGroup>
+
+  <!-- Every piece of UI text is in Resources\Strings.resx (English) and Strings.nb.resx (Norwegian
+       Bokmål). The build generates the Strings class from the English file. -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.g.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>EasyPDF.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- WPF compiles a throwaway copy of the assembly before the XAML, and resource generation
+       normally runs after that, so the copy would not see the Strings class. Generating it first
+       and handing it to that compile fixes the order. -->
+  <Target Name="GenerateStringsBeforeXaml" BeforeTargets="MarkupCompilePass1" DependsOnTargets="PrepareResourceNames;ResGen">
+    <ItemGroup>
+      <_GeneratedCodeFiles Include="$(IntermediateOutputPath)Strings.g.cs" />
+    </ItemGroup>
+  </Target>
+
+</Project>

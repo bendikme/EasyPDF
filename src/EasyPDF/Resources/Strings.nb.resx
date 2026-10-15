@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="App_Error_Title" xml:space="preserve">
+    <value>Noe gikk galt</value>
+  </data>
+  <data name="App_Error" xml:space="preserve">
+    <value>EasyPDF fikk et problem og fortsatte: {0}
+
+Detaljene står i {1}.</value>
+  </data>
+  <data name="Common_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Avbryt</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>Lukk</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>Nei</value>
+  </data>
+  <data name="Main_Window_Minimize" xml:space="preserve">
+    <value>Minimer</value>
+  </data>
+  <data name="Main_Window_Maximize" xml:space="preserve">
+    <value>Maksimer</value>
+  </data>
+  <data name="Main_Window_Restore" xml:space="preserve">
+    <value>Gjenopprett</value>
+  </data>
+  <data name="Main_Window_Close" xml:space="preserve">
+    <value>Lukk</value>
+  </data>
+  <data name="Main_Open" xml:space="preserve">
+    <value>Åpne</value>
+  </data>
+  <data name="Main_Open_Tooltip" xml:space="preserve">
+    <value>Åpne en PDF (Ctrl+O)</value>
+  </data>
+  <data name="Main_OpenPdf" xml:space="preserve">
+    <value>Åpne PDF</value>
+  </data>
+  <data name="Main_Opening" xml:space="preserve">
+    <value>Åpner …</value>
+  </data>
+  <data name="Main_Empty_Hint" xml:space="preserve">
+    <value>Åpne en PDF, eller slipp en her.</value>
+  </data>
+  <data name="Main_DropHint" xml:space="preserve">
+    <value>Slipp for å åpne</value>
+  </data>
+  <data name="Main_Recent_Header" xml:space="preserve">
+    <value>NYLIG ÅPNET</value>
+  </data>
+  <data name="Main_Recent_Clear" xml:space="preserve">
+    <value>Tøm</value>
+  </data>
+  <data name="Main_Recent_Remove" xml:space="preserve">
+    <value>Fjern fra listen</value>
+  </data>
+  <data name="Main_Recent_Clear_Tooltip" xml:space="preserve">
+    <value>Tøm listen. Festede filer blir værende.</value>
+  </data>
+  <data name="Main_Recent_Pin" xml:space="preserve">
+    <value>Fest til listen</value>
+  </data>
+  <data name="Main_Recent_Unpin" xml:space="preserve">
+    <value>Løsne fra listen</value>
+  </data>
+  <data name="Main_Recent_Missing" xml:space="preserve">
+    <value>Finnes ikke</value>
+  </data>
+  <data name="Main_Recent_Unavailable" xml:space="preserve">
+    <value>Ikke tilgjengelig</value>
+  </data>
+  <data name="Main_Continuous" xml:space="preserve">
+    <value>Sammenhengende</value>
+  </data>
+  <data name="Main_SinglePage" xml:space="preserve">
+    <value>Én side om gangen</value>
+  </data>
+  <data name="Main_PageDisplay" xml:space="preserve">
+    <value>Sidevisning</value>
+  </data>
+  <data name="Main_PageDisplay_Tooltip" xml:space="preserve">
+    <value>Sammenhengende, eller et fast antall sider om gangen</value>
+  </data>
+  <data name="Grid_TwoPages" xml:space="preserve">
+    <value>To sider ved siden av hverandre</value>
+  </data>
+  <data name="Grid_TwoPagesCover" xml:space="preserve">
+    <value>To sider, forsiden alene</value>
+  </data>
+  <data name="Grid_TwoStacked" xml:space="preserve">
+    <value>To sider, over hverandre</value>
+  </data>
+  <data name="Grid_Four" xml:space="preserve">
+    <value>Fire sider (2 × 2)</value>
+  </data>
+  <data name="Grid_Six" xml:space="preserve">
+    <value>Seks sider (3 × 2)</value>
+  </data>
+  <data name="Grid_Nine" xml:space="preserve">
+    <value>Ni sider (3 × 3)</value>
+  </data>
+  <data name="Grid_Other" xml:space="preserve">
+    <value>Annet rutenett</value>
+  </data>
+  <data name="Grid_Size" xml:space="preserve">
+    <value>{0} × {1}</value>
+  </data>
+  <data name="Grid_SizeCover" xml:space="preserve">
+    <value>{0} × {1}, forsiden alene</value>
+  </data>
+  <data name="Grid_Pages" xml:space="preserve">
+    <value>{0}: {1} sider om gangen</value>
+  </data>
+  <data name="Grid_Point" xml:space="preserve">
+    <value>Pek for å velge kolonner og rader</value>
+  </data>
+  <data name="Trail_Hide" xml:space="preserve">
+    <value>Skjul sporet</value>
+  </data>
+  <data name="Trail_Hide_Tooltip" xml:space="preserve">
+    <value>Skjul til neste hopp. Alt+Venstre går fortsatt tilbake.</value>
+  </data>
+  <data name="Trail_BackTo" xml:space="preserve">
+    <value>Tilbake til side {0} (Alt+Venstre)</value>
+  </data>
+  <data name="Trail_ForwardTo" xml:space="preserve">
+    <value>Fram til side {0} (Alt+Høyre)</value>
+  </data>
+  <data name="Trail_Page" xml:space="preserve">
+    <value>Side {0}</value>
+  </data>
+  <data name="Trail_Here" xml:space="preserve">
+    <value>Du er her</value>
+  </data>
+  <data name="Trail_OneBack" xml:space="preserve">
+    <value>Ett steg tilbake (Alt+Venstre)</value>
+  </data>
+  <data name="Trail_OneForward" xml:space="preserve">
+    <value>Ett steg fram (Alt+Høyre)</value>
+  </data>
+  <data name="Trail_StepsBack" xml:space="preserve">
+    <value>{0} steg tilbake</value>
+  </data>
+  <data name="Trail_StepsForward" xml:space="preserve">
+    <value>{0} steg fram</value>
+  </data>
+  <data name="Trail_More" xml:space="preserve">
+    <value>{0} steder til</value>
+  </data>
+  <data name="More_Recent" xml:space="preserve">
+    <value>Nylige filer</value>
+  </data>
+  <data name="Main_Sidebar_Compact" xml:space="preserve">
+    <value>Kompakt liste</value>
+  </data>
+  <data name="Main_Sidebar_Compact_Tooltip" xml:space="preserve">
+    <value>Mindre rader og miniatyrer, så flere får plass</value>
+  </data>
+  <data name="More_Recent_None" xml:space="preserve">
+    <value>Ingen nylige filer</value>
+  </data>
+  <data name="More_ClearRecent" xml:space="preserve">
+    <value>Tøm nylige filer</value>
+  </data>
+  <data name="Main_Search_Placeholder" xml:space="preserve">
+    <value>Søk i dokumentet</value>
+  </data>
+  <data name="Main_Search_Tooltip" xml:space="preserve">
+    <value>Finn tekst i dokumentet (Ctrl+F). Enter finner neste treff, Shift+Enter forrige.</value>
+  </data>
+  <data name="Main_Search_Next" xml:space="preserve">
+    <value>Neste treff (F3)</value>
+  </data>
+  <data name="Main_Search_Previous" xml:space="preserve">
+    <value>Forrige treff (Shift+F3)</value>
+  </data>
+  <data name="Main_Search_Clear" xml:space="preserve">
+    <value>Tøm søket (Esc)</value>
+  </data>
+  <data name="Main_Search_Searching" xml:space="preserve">
+    <value>Søker …</value>
+  </data>
+  <data name="Main_Search_None" xml:space="preserve">
+    <value>Ingen treff</value>
+  </data>
+  <data name="Main_Search_Count" xml:space="preserve">
+    <value>{0} av {1}{2}</value>
+  </data>
+  <data name="Main_Sidebar" xml:space="preserve">
+    <value>Sidepanel</value>
+  </data>
+  <data name="Main_Sidebar_Tooltip" xml:space="preserve">
+    <value>Vis eller skjul innholdsfortegnelse og sider (F4)</value>
+  </data>
+  <data name="Main_Sidebar_Outline" xml:space="preserve">
+    <value>Innhold</value>
+  </data>
+  <data name="Main_Sidebar_Pages" xml:space="preserve">
+    <value>Sider</value>
+  </data>
+  <data name="Main_Sidebar_Summary" xml:space="preserve">
+    <value>Side {0} av {1} · {2}</value>
+  </data>
+  <data name="Main_Outline_Empty" xml:space="preserve">
+    <value>Dette dokumentet har ingen innholdsfortegnelse.</value>
+  </data>
+  <data name="Main_Page" xml:space="preserve">
+    <value>Sidenummer</value>
+  </data>
+  <data name="Main_Page_Tooltip" xml:space="preserve">
+    <value>Skriv et sidenummer og trykk Enter (Ctrl+G)</value>
+  </data>
+  <data name="Main_PageOf" xml:space="preserve">
+    <value>av {0}</value>
+  </data>
+  <data name="Main_Zoom" xml:space="preserve">
+    <value>Zoom</value>
+  </data>
+  <data name="Main_Zoom_Tooltip" xml:space="preserve">
+    <value>Velg zoomnivå</value>
+  </data>
+  <data name="Main_ZoomIn" xml:space="preserve">
+    <value>Zoom inn</value>
+  </data>
+  <data name="Main_ZoomIn_Tooltip" xml:space="preserve">
+    <value>Zoom inn (Ctrl++ eller Ctrl+rull)</value>
+  </data>
+  <data name="Main_ZoomOut" xml:space="preserve">
+    <value>Zoom ut</value>
+  </data>
+  <data name="Main_ZoomOut_Tooltip" xml:space="preserve">
+    <value>Zoom ut (Ctrl+-)</value>
+  </data>
+  <data name="Main_FitWidth" xml:space="preserve">
+    <value>Tilpass bredden</value>
+  </data>
+  <data name="Main_FitWidth_Tooltip" xml:space="preserve">
+    <value>Tilpass sidene til vinduets bredde, eller hele sider til vinduet (Ctrl+2, Ctrl+0)</value>
+  </data>
+  <data name="Main_FitPage" xml:space="preserve">
+    <value>Tilpass hele siden</value>
+  </data>
+  <data name="Main_Rotate" xml:space="preserve">
+    <value>Roter</value>
+  </data>
+  <data name="Main_Rotate_Tooltip" xml:space="preserve">
+    <value>Roter sidene med klokken (Ctrl+Shift++)</value>
+  </data>
+  <data name="Main_Print" xml:space="preserve">
+    <value>Skriv ut</value>
+  </data>
+  <data name="Main_Print_Tooltip" xml:space="preserve">
+    <value>Skriv ut (Ctrl+P)</value>
+  </data>
+  <data name="Main_More" xml:space="preserve">
+    <value>Mer</value>
+  </data>
+  <data name="Main_Copied" xml:space="preserve">
+    <value>Kopiert</value>
+  </data>
+  <data name="More_Back" xml:space="preserve">
+    <value>Tilbake</value>
+  </data>
+  <data name="More_Forward" xml:space="preserve">
+    <value>Fremover</value>
+  </data>
+  <data name="More_RotateLeft" xml:space="preserve">
+    <value>Roter mot klokken</value>
+  </data>
+  <data name="More_FullScreen" xml:space="preserve">
+    <value>Fullskjerm</value>
+  </data>
+  <data name="More_MatchCase" xml:space="preserve">
+    <value>Skill mellom store og små bokstaver</value>
+  </data>
+  <data name="More_WholeWords" xml:space="preserve">
+    <value>Bare hele ord</value>
+  </data>
+  <data name="More_NewWindow" xml:space="preserve">
+    <value>Nytt vindu</value>
+  </data>
+  <data name="More_Reload" xml:space="preserve">
+    <value>Last inn på nytt</value>
+  </data>
+  <data name="More_ShowInFolder" xml:space="preserve">
+    <value>Vis i mappen</value>
+  </data>
+  <data name="More_Properties" xml:space="preserve">
+    <value>Dokumentegenskaper</value>
+  </data>
+  <data name="More_CloseDocument" xml:space="preserve">
+    <value>Lukk dokumentet</value>
+  </data>
+  <data name="More_CloseWindow" xml:space="preserve">
+    <value>Lukk vinduet</value>
+  </data>
+  <data name="View_Copy" xml:space="preserve">
+    <value>Kopier</value>
+  </data>
+  <data name="View_CopyLink" xml:space="preserve">
+    <value>Kopier lenkeadressen</value>
+  </data>
+  <data name="View_CopyLinkPage" xml:space="preserve">
+    <value>Kopier lenkemålet</value>
+  </data>
+  <data name="View_SelectAll" xml:space="preserve">
+    <value>Merk alt</value>
+  </data>
+  <data name="View_Back" xml:space="preserve">
+    <value>Tilbake</value>
+  </data>
+  <data name="View_Forward" xml:space="preserve">
+    <value>Fremover</value>
+  </data>
+  <data name="View_LinkPage" xml:space="preserve">
+    <value>Side {0}</value>
+  </data>
+  <data name="View_Action_NextPage" xml:space="preserve">
+    <value>Neste side</value>
+  </data>
+  <data name="View_Action_PrevPage" xml:space="preserve">
+    <value>Forrige side</value>
+  </data>
+  <data name="View_Action_FirstPage" xml:space="preserve">
+    <value>Første side</value>
+  </data>
+  <data name="View_Action_LastPage" xml:space="preserve">
+    <value>Siste side</value>
+  </data>
+  <data name="View_Action_GoToPage" xml:space="preserve">
+    <value>Gå til side</value>
+  </data>
+  <data name="View_Action_Find" xml:space="preserve">
+    <value>Søk</value>
+  </data>
+  <data name="Open_Dialog_Title" xml:space="preserve">
+    <value>Åpne PDF</value>
+  </data>
+  <data name="Open_Filter_Pdf" xml:space="preserve">
+    <value>PDF-dokumenter (*.pdf)</value>
+  </data>
+  <data name="Open_Filter_All" xml:space="preserve">
+    <value>Alle filer (*.*)</value>
+  </data>
+  <data name="Open_Failed_Title" xml:space="preserve">
+    <value>Dokumentet kunne ikke åpnes</value>
+  </data>
+  <data name="Open_NotFound" xml:space="preserve">
+    <value>Fant ikke {0}. Den kan være flyttet, gitt nytt navn eller slettet.</value>
+  </data>
+  <data name="Open_AccessDenied" xml:space="preserve">
+    <value>{0} kunne ikke leses. Et annet program kan holde den åpen, eller du har kanskje ikke tilgang til den.</value>
+  </data>
+  <data name="Open_NotPdf" xml:space="preserve">
+    <value>{0} er ikke et PDF-dokument.</value>
+  </data>
+  <data name="Open_Damaged" xml:space="preserve">
+    <value>{0} er skadet og kan ikke leses. Hvis den fortsatt lastes ned eller skrives, prøv igjen når den er ferdig.</value>
+  </data>
+  <data name="Open_UnsupportedSecurity" xml:space="preserve">
+    <value>{0} er beskyttet på en måte EasyPDF ikke kan åpne (for eksempel med sertifikat eller DRM).</value>
+  </data>
+  <data name="Open_Empty" xml:space="preserve">
+    <value>{0} er tom.</value>
+  </data>
+  <data name="Open_Unknown" xml:space="preserve">
+    <value>{0} kunne ikke åpnes: {1}</value>
+  </data>
+  <data name="Reload_Failed_Title" xml:space="preserve">
+    <value>Dokumentet kunne ikke lastes inn på nytt</value>
+  </data>
+  <data name="Password_Title" xml:space="preserve">
+    <value>Passord kreves</value>
+  </data>
+  <data name="Password_Prompt" xml:space="preserve">
+    <value>{0} er beskyttet. Skriv inn passordet for å åpne den.</value>
+  </data>
+  <data name="Password_Wrong" xml:space="preserve">
+    <value>Passordet er feil. Prøv igjen.</value>
+  </data>
+  <data name="Password_Open" xml:space="preserve">
+    <value>Åpne</value>
+  </data>
+  <data name="Link_Confirm_Title" xml:space="preserve">
+    <value>Åpne dette fra dokumentet?</value>
+  </data>
+  <data name="Link_Confirm_Message" xml:space="preserve">
+    <value>En lenke i dokumentet vil åpne følgende. Fortsett bare hvis du stoler på dokumentet og kjenner igjen hvor den fører.</value>
+  </data>
+  <data name="Link_Confirm_Open" xml:space="preserve">
+    <value>Åpne</value>
+  </data>
+  <data name="Link_Failed_Title" xml:space="preserve">
+    <value>Lenken kunne ikke følges</value>
+  </data>
+  <data name="Link_Failed" xml:space="preserve">
+    <value>Windows kunne ikke åpne {0}.</value>
+  </data>
+  <data name="Link_Missing" xml:space="preserve">
+    <value>Lenken peker til {0}, som ikke finnes.</value>
+  </data>
+  <data name="Link_Refused_Title" xml:space="preserve">
+    <value>Lenken ble ikke åpnet</value>
+  </data>
+  <data name="Link_Refused" xml:space="preserve">
+    <value>Lenken ville kjøre et program eller et skript ({0}). EasyPDF kjører aldri programmer fra et dokument.</value>
+  </data>
+  <data name="Print_Progress" xml:space="preserve">
+    <value>Skriver ut side {0} av {1} …</value>
+  </data>
+  <data name="Print_Done" xml:space="preserve">
+    <value>Sendt til skriveren</value>
+  </data>
+  <data name="Print_Failed_Title" xml:space="preserve">
+    <value>Utskriften mislyktes</value>
+  </data>
+  <data name="Print_Failed" xml:space="preserve">
+    <value>Dokumentet kunne ikke skrives ut: {0}</value>
+  </data>
+  <data name="Print_PageFailed" xml:space="preserve">
+    <value>Side {0} kunne ikke skrives ut, så utskriften ble stoppet.</value>
+  </data>
+  <data name="Properties_Title" xml:space="preserve">
+    <value>Dokumentegenskaper</value>
+  </data>
+  <data name="Properties_File" xml:space="preserve">
+    <value>Fil</value>
+  </data>
+  <data name="Properties_Folder" xml:space="preserve">
+    <value>Mappe</value>
+  </data>
+  <data name="Properties_Size" xml:space="preserve">
+    <value>Størrelse</value>
+  </data>
+  <data name="Properties_SizeBytes" xml:space="preserve">
+    <value>{0} ({1:N0} byte)</value>
+  </data>
+  <data name="Properties_Pages" xml:space="preserve">
+    <value>Sider</value>
+  </data>
+  <data name="Properties_PageSize" xml:space="preserve">
+    <value>Sidestørrelse</value>
+  </data>
+  <data name="Properties_PageSizeValue" xml:space="preserve">
+    <value>{0:0} × {1:0} mm ({2:0.##} × {3:0.##} tommer)</value>
+  </data>
+  <data name="Properties_Version" xml:space="preserve">
+    <value>PDF-versjon</value>
+  </data>
+  <data name="Properties_DocTitle" xml:space="preserve">
+    <value>Tittel</value>
+  </data>
+  <data name="Properties_Author" xml:space="preserve">
+    <value>Forfatter</value>
+  </data>
+  <data name="Properties_Subject" xml:space="preserve">
+    <value>Emne</value>
+  </data>
+  <data name="Properties_Keywords" xml:space="preserve">
+    <value>Nøkkelord</value>
+  </data>
+  <data name="Properties_Creator" xml:space="preserve">
+    <value>Laget med</value>
+  </data>
+  <data name="Properties_Producer" xml:space="preserve">
+    <value>PDF-produsent</value>
+  </data>
+  <data name="Properties_Created" xml:space="preserve">
+    <value>Opprettet</value>
+  </data>
+  <data name="Properties_Modified" xml:space="preserve">
+    <value>Endret</value>
+  </data>
+  <data name="Properties_Encrypted" xml:space="preserve">
+    <value>Kryptert</value>
+  </data>
+  <data name="Properties_Form" xml:space="preserve">
+    <value>Har skjemafelt</value>
+  </data>
+  <data name="Size_Bytes" xml:space="preserve">
+    <value>{0} byte</value>
+  </data>
+  <data name="Size_KB" xml:space="preserve">
+    <value>{0:0.#} kB</value>
+  </data>
+  <data name="Size_MB" xml:space="preserve">
+    <value>{0:0.#} MB</value>
+  </data>
+  <data name="Size_GB" xml:space="preserve">
+    <value>{0:0.##} GB</value>
+  </data>
+  <data name="Time_JustNow" xml:space="preserve">
+    <value>Akkurat nå</value>
+  </data>
+  <data name="Time_MinuteAgo" xml:space="preserve">
+    <value>for {0} minutt siden</value>
+  </data>
+  <data name="Time_MinutesAgo" xml:space="preserve">
+    <value>for {0} minutter siden</value>
+  </data>
+  <data name="Time_TodayAt" xml:space="preserve">
+    <value>I dag {0}</value>
+  </data>
+  <data name="Time_YesterdayAt" xml:space="preserve">
+    <value>I går {0}</value>
+  </data>
+  <data name="Time_DateFormat" xml:space="preserve">
+    <value>d. MMM</value>
+  </data>
+  <data name="Time_DateYearFormat" xml:space="preserve">
+    <value>d. MMM yyyy</value>
+  </data>
+</root>
