@@ -925,7 +925,7 @@ internal static class ViewerChecks
         Equal(window.ThumbnailList.SelectedIndex, 0, "the current page is selected");
         window.PageView.GoToPage(2);
         Pump(20);
-        Equal(window.ThumbnailList.SelectedIndex, 2, "the strip follows the page");
+        Equal(window.ThumbnailList.SelectedIndex, 2, $"the strip follows the page (current page {window.PageView.CurrentPage}, {window.PageView.DescribeScreen()})");
     }
 
     private static void HeaderFolds()

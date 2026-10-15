@@ -56,9 +56,11 @@ follows every kind of link a PDF can hold.
 - **Continuous, one page at a time, or a grid of pages** (the page display button, or the More
   menu): one page, two side by side, two with the cover alone (a book's spreads), two one above
   the other, 2 x 2, 3 x 2, 3 x 3 - or any grid up to 6 x 4, picked by pointing at cells. A fixed
-  number at a time, nothing of the other pages is in sight; the arrow keys, Page Up/Down, Space,
-  the wheel and the scroll bar scroll a sheet taller than the window, then turn to the next - at
-  once, not scrolling - and each turn shows for a moment which pages these are ("5-8 of 2124"),
+  number at a time, nothing of the other pages is in sight. One page at a time, the arrow keys,
+  Page Up/Down, Space, the wheel and the scroll bar scroll a page taller than the window, then
+  turn to the next; several at a time, every key turns the whole sheet - as many pages as are
+  shown - however large it is, and Ctrl+Up/Down scroll within it. A turn is at once, not
+  scrolling, and each shows for a moment which pages these are ("5-8 of 2124"),
   with a line for how far through the document. A grid of several pages is fitted whole when it
   is chosen. Shift+Down/Up turns at once however far the sheet could still scroll, and, held,
   faster and faster (1, 2, 5, 10, then 25 sheets a step). Turns are smooth: the sheets either
@@ -70,10 +72,14 @@ follows every kind of link a PDF can hold.
   reader somewhere, a bar over the page shows the places behind and ahead - the page the link
   was clicked on, not just the one most in view - each a click away however many steps back or
   forward it is; pointing at one shows a picture of the page and the part of the document it is
-  in. A long trail folds into "..." menus. The bar dims after a few seconds so the drawing under
+  in. A page is on the trail once: following links back and forth between two pages leaves two
+  places, a link within the page being read adds none, and a page scrolled to by hand that the
+  trail already has is "here", with Back going on past it. A long trail folds into "..." menus.
+  The bar dims after a few seconds so the drawing under
   it shows, brightens under the pointer, and can be hidden until the next jump.
 - **Outline and pages.** The sidebar shows the document's outline, or thumbnails of its pages
-  that follow the page being read; compact rows fit half as many again into it.
+  that follow the page being read; compact rows fit half as many again into it. The scroll bar
+  has a lane of its own, so it never covers the selected row.
 - **Reloads by itself.** The file is never locked: whatever writes it (a LaTeX build, a report
   generator) can replace it while it is open, and EasyPDF reloads it at the same place.
 - **Remembers where you were.** Reopening a document returns to the page, position, zoom,
@@ -172,7 +178,8 @@ settings and the log in another folder.
 | Ctrl+C, Ctrl+A | Copy, select all |
 | Ctrl+P, Ctrl+D | Print, document properties |
 | F4, F5, F11 | Sidebar, reload, full screen |
-| Page Up/Down, Space, Home, End, arrows | Move through the document; a fixed number of pages at a time, Left and Right turn |
+| Page Up/Down, Space, Home, End, arrows | Move through the document; several pages at a time, each turns the whole sheet |
+| Ctrl+Up, Ctrl+Down | Several pages at a time: scroll within a sheet taller than the window |
 | Shift+Down, Shift+Up | Turn at once; held, faster and faster |
 
 ## How it is put together

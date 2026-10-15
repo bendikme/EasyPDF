@@ -222,6 +222,38 @@
             </Setter>
         </Style>
 
+        <!-- The sidebar's lists: the scroll bar in a column of its own rather than over the rows, so
+             a selected row's highlight ends beside the bar instead of running under it. With nothing
+             to scroll the column is empty and the rows take the whole width. -->
+        <Style x:Key="SidebarScrollViewerStyle" TargetType="ScrollViewer" BasedOn="{StaticResource AppScrollViewerStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollViewer">
+                        <Grid Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                    Grid.Column="0"
+                                                    Margin="{TemplateBinding Padding}"
+                                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                    Content="{TemplateBinding Content}"
+                                                    ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            <ScrollBar x:Name="PART_VerticalScrollBar"
+                                       Grid.Column="1"
+                                       Orientation="Vertical"
+                                       Margin="1,2,3,2"
+                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                       Value="{TemplateBinding VerticalOffset}"
+                                       Maximum="{TemplateBinding ScrollableHeight}"
+                                       ViewportSize="{TemplateBinding ViewportHeight}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- The shared template wraps its items in a plain ScrollViewer that does not forward the
              ScrollViewer.* attached properties, which switches virtualization off; this copy forwards
              them, so a ten-thousand-entry outline stays as fast as a short one. -->
@@ -232,7 +264,7 @@
                         <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
                             <ScrollViewer Focusable="False"
                                           Padding="0"
-                                          Style="{StaticResource AppScrollViewerStyle}"
+                                          Style="{StaticResource SidebarScrollViewerStyle}"
                                           CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
                                           HorizontalScrollBarVisibility="Disabled"
                                           VerticalScrollBarVisibility="Auto">
@@ -266,7 +298,7 @@
                         <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
                             <ScrollViewer Focusable="False"
                                           Padding="0"
-                                          Style="{StaticResource AppScrollViewerStyle}"
+                                          Style="{StaticResource SidebarScrollViewerStyle}"
                                           CanContentScroll="True"
                                           HorizontalScrollBarVisibility="Disabled"
                                           VerticalScrollBarVisibility="Auto">

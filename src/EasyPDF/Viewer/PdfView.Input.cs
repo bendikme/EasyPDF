@@ -589,6 +589,10 @@ public sealed partial class PdfView
         var ctrl = modifiers.HasFlag(ModifierKeys.Control);
         var shift = modifiers.HasFlag(ModifierKeys.Shift);
         var wide = _layout is { } l && l.ExtentWidth > _viewportWidth;
+        // Several pages at a time, every key that moves on turns the whole sheet - as many pages
+        // as are shown - even when the sheet is taller or wider than the window: scrolling it a
+        // little would only shift the same pages about.
+        var sheets = _layout is { Fixed: true, Grid.PerSheet: > 1 };
 
         switch (key)
         {
@@ -597,6 +601,15 @@ public sealed partial class PdfView
                 return true;
             case Key.Up when shift && !ctrl:
                 FastFlip(-1);
+                return true;
+            case Key.Down or Key.Right or Key.PageDown when sheets && !ctrl:
+                FlipPage(1);
+                return true;
+            case Key.Up or Key.Left or Key.PageUp when sheets && !ctrl:
+                FlipPage(-1);
+                return true;
+            case Key.Space when sheets:
+                FlipPage(shift ? -1 : 1);
                 return true;
             case Key.Down:
                 LineDown();

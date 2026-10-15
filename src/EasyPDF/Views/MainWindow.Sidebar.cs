@@ -88,6 +88,8 @@ public partial class MainWindow
 
     internal void ShowPagesInSidebar() => ShowSidebarMode(SidebarMode.Pages);
 
+    internal void ShowOutlineInSidebar() => ShowSidebarMode(SidebarMode.Outline);
+
     private void InitializeSidebar()
     {
         ApplySidebarDensity(SettingsStore.Current.Settings.SidebarCompact);

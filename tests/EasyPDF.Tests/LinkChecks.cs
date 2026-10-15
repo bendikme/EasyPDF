@@ -230,7 +230,9 @@ internal static class LayoutChecks
         h.Record(new(5, 0.5));
         Check(!h.CanGoForward, "a new jump drops what was ahead");
         h.Record(new(5, 0.505));
-        Equal(h.Back(new(7, 0)), new EasyPDF.Viewer.ViewPosition(5, 0.5), "a jump from the same place is remembered once");
+        // Two jumps from one page are one place on the trail: the later spot on it, where the reader last was.
+        Equal(h.Back(new(7, 0)), new EasyPDF.Viewer.ViewPosition(5, 0.505), "a jump from the same page is remembered once");
+        Equal(h.BackEntries.Count, 1, "and only once");
         for (var i = 0; i < 500; i++) h.Record(new(i, 0));
         var steps = 0;
         while (h.CanGoBack) { h.Back(new(0, 0)); steps++; }

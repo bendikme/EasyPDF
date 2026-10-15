@@ -7,3 +7,6 @@ artifacts/
 
 # Documents dropped at the root to try the viewer on are nobody else's business.
 /*.pdf
+
+# WPF writes a temporary project beside the real one while it builds.
+*_wpftmp.csproj

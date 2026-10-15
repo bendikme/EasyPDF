@@ -66,16 +66,23 @@ public partial class MainWindow
         TrailBar.BeginAnimation(OpacityProperty, fade);
     }
 
-    /// <summary>The trail's places, in order: behind (oldest first), here, ahead (nearest first), each with how many steps away it is.</summary>
+    /// <summary>
+    /// The trail's places, in order: behind (oldest first), here, ahead (nearest first), each with
+    /// how many steps away it is. A visit to the page the reader has scrolled to by hand is that
+    /// page's own "here", not a second place.
+    /// </summary>
     internal List<(int Steps, int Page)> TrailPlaces()
     {
         var history = View.History;
+        var here = View.CurrentPage;
         var places = new List<(int Steps, int Page)>();
         var back = history.BackEntries;
-        for (var i = 0; i < back.Count; i++) places.Add((i - back.Count, back[i].ShownPage));
-        places.Add((0, View.CurrentPage));
+        for (var i = 0; i < back.Count; i++)
+            if (back[i].ShownPage != here) places.Add((i - back.Count, back[i].ShownPage));
+        places.Add((0, here));
         var forward = history.ForwardEntries;
-        for (var i = forward.Count - 1; i >= 0; i--) places.Add((forward.Count - i, forward[i].ShownPage));
+        for (var i = forward.Count - 1; i >= 0; i--)
+            if (forward[i].ShownPage != here) places.Add((forward.Count - i, forward[i].ShownPage));
         return places;
     }
 
@@ -86,7 +93,8 @@ public partial class MainWindow
     internal IEnumerable<(string Text, bool Here)> TrailChipsShown() =>
         TrailChips.Children.OfType<Button>().Select(b => (b.Content is TextBlock t ? t.Text : b.Content?.ToString() ?? string.Empty, b.Tag is "on"));
 
-    private void RefreshTrail()
+    /// <param name="wake">Bright again, as after a jump; not when the reader merely scrolled onto a page with a visit on the trail.</param>
+    private void RefreshTrail(bool wake = true)
     {
         var history = View.History;
         TrailChips.Children.Clear();
@@ -100,18 +108,10 @@ public partial class MainWindow
         }
 
         TrailBar.Visibility = Visibility.Visible;
-        WakeTrail(TrailAwake);
-        TrailBackButton.IsEnabled = history.CanGoBack;
-        TrailForwardButton.IsEnabled = history.CanGoForward;
-        TrailBackButton.ToolTip = history.CanGoBack
-            ? UiLanguage.Format(Strings.Trail_BackTo, history.BackEntries[^1].ShownPage + 1)
-            : Strings.View_Back;
-        TrailForwardButton.ToolTip = history.CanGoForward
-            ? UiLanguage.Format(Strings.Trail_ForwardTo, history.ForwardEntries[^1].ShownPage + 1)
-            : Strings.View_Forward;
-
+        if (wake || TrailBar.Opacity <= 0) WakeTrail(TrailAwake);
         var places = TrailPlaces();
-        var here = history.BackEntries.Count;
+        var here = places.FindIndex(p => p.Steps == 0);
+        UpdateTrailButtons(places, here);
         var from = Math.Max(0, here - TrailReach);
         var to = Math.Min(places.Count - 1, here + TrailReach);
         if (from > 0)
@@ -131,10 +131,31 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>The reader moved: "you are here" follows.</summary>
+    /// <summary>Back and forward name the place each leads to: the nearest on another page.</summary>
+    private void UpdateTrailButtons(List<(int Steps, int Page)> places, int here)
+    {
+        TrailBackButton.IsEnabled = here > 0;
+        TrailForwardButton.IsEnabled = here < places.Count - 1;
+        TrailBackButton.ToolTip = here > 0 ? UiLanguage.Format(Strings.Trail_BackTo, places[here - 1].Page + 1) : Strings.View_Back;
+        TrailForwardButton.ToolTip = here < places.Count - 1 ? UiLanguage.Format(Strings.Trail_ForwardTo, places[here + 1].Page + 1) : Strings.View_Forward;
+    }
+
+    private int _trailHerePage = -1;
+
+    /// <summary>The reader moved: "you are here" follows - and a page with a visit of its own on the trail folds into it.</summary>
     private void UpdateTrailHere(int page)
     {
-        if (_trailHere is not null) _trailHere.Text = (page + 1).ToString(UiLanguage.Culture);
+        if (_trailHere is null || page == _trailHerePage) return;
+        var history = View.History;
+        var folds = history.BackEntries.Any(e => e.ShownPage == page || e.ShownPage == _trailHerePage) ||
+                    history.ForwardEntries.Any(e => e.ShownPage == page || e.ShownPage == _trailHerePage);
+        _trailHerePage = page;
+        if (folds)
+        {
+            RefreshTrail(wake: false);
+            return;
+        }
+        _trailHere.Text = (page + 1).ToString(UiLanguage.Culture);
     }
 
     private void AddPlace(int steps, int page)
@@ -148,6 +169,7 @@ public partial class MainWindow
             text.FontWeight = FontWeights.SemiBold;
             place.ToolTip = Strings.Trail_Here;
             _trailHere = text;
+            _trailHerePage = page;
         }
         else
         {
@@ -263,9 +285,17 @@ public partial class MainWindow
         View.Focus();
     }
 
-    private void OnTrailBackClick(object sender, RoutedEventArgs e) => GoAlongTrail(-1);
+    private void OnTrailBackClick(object sender, RoutedEventArgs e)
+    {
+        View.GoBack();
+        View.Focus();
+    }
 
-    private void OnTrailForwardClick(object sender, RoutedEventArgs e) => GoAlongTrail(1);
+    private void OnTrailForwardClick(object sender, RoutedEventArgs e)
+    {
+        View.GoForward();
+        View.Focus();
+    }
 
     private void OnTrailCloseClick(object sender, RoutedEventArgs e)
     {

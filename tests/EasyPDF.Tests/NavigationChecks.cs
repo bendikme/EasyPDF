@@ -17,11 +17,14 @@ internal static class NavigationChecks
     [
         ("A jump that marks where it lands (EPLAN's highlight script) marks that element, not the page", MarkedDestinations),
         ("The sidebar's compact rows fit more in, and are remembered", CompactSidebar),
+        ("The sidebar's scroll bar sits beside the selected row, not over it", SidebarScrollBarBesideRows),
         ("A grid of pages: sheets turn whole, pages sit in their cells, the cover stands alone", PageGrids),
         ("A grid of any size from the picker, remembered, and from settings written before grids", GridPickerAndSettings),
         ("Shift+Down/Up turns at once and faster and faster while held", FastFlipping),
         ("A turn shows a sheet already drawn, fading the one before out", SmoothTurns),
         ("The trail of jumps: back and forward, several places at once, folded when long", JumpTrail),
+        ("A page is on the trail once: back and forth, the same page, a page scrolled to", TrailHoldsEachPageOnce),
+        ("Several pages at a time, every key turns the whole sheet, however large it is", KeysTurnWholeSheets),
     ];
 
     private static MainWindow ShowWindow(string path)
@@ -175,22 +178,106 @@ internal static class NavigationChecks
         Pump(50);
         Check(!window.IsSidebarCompact, "normal rows to begin with");
         var normalRow = (double)window.FindResource("NavigatorRowHeight");
-        PumpUntil(() => window.ThumbnailList.ItemContainerGenerator.ContainerFromIndex(0) is FrameworkElement { ActualHeight: > 0 }, "a thumbnail row");
-        var normalThumb = ((FrameworkElement)window.ThumbnailList.ItemContainerGenerator.ContainerFromIndex(0)).ActualHeight;
+        PumpUntil(() => window.ThumbnailList.Items.Count == 3, "the thumbnails");
+        var normalThumb = ((ThumbnailItem)window.ThumbnailList.Items[0]!).Width;
+        var normalPadding = (Thickness)window.FindResource("ThumbnailRowPadding");
 
         window.SetCompactSidebar(true);
         Pump(50);
         Check(window.IsSidebarCompact, "compact");
         Check((double)window.FindResource("NavigatorRowHeight") < normalRow, "outline rows are shorter");
         Equal(window.CompactButton.Tag, (object)"on", "the button shows it is on");
-        PumpUntil(() => window.ThumbnailList.ItemContainerGenerator.ContainerFromIndex(0) is FrameworkElement { ActualHeight: > 0 } row && row.ActualHeight < normalThumb * 0.75,
-            "thumbnail rows are smaller");
+        PumpUntil(() => window.ThumbnailList.Items.Count == 3 && ((ThumbnailItem)window.ThumbnailList.Items[0]!).Width < normalThumb * 0.75,
+            "smaller thumbnails");
+        var padding = (Thickness)window.FindResource("ThumbnailRowPadding");
+        Check(padding.Top + padding.Bottom < normalPadding.Top + normalPadding.Bottom, "closer together");
         Check(SettingsStore.Current.Settings.SidebarCompact, "remembered");
 
         var again = ShowWindow(Fixture("links.pdf"));
         Check(again.IsSidebarCompact, "a new window is compact too");
         again.SetCompactSidebar(false);
         Check(!SettingsStore.Current.Settings.SidebarCompact, "and normal again");
+    }
+
+    private static void SidebarScrollBarBesideRows()
+    {
+        var window = ShowWindow(Pages30());
+        window.SetSidebar(true, remember: false);
+
+        // Thirty thumbnails: the list scrolls, the bar shows, and the selected row stops short of it.
+        window.ShowPagesInSidebar();
+        window.PageView.GoToPage(3, record: false);
+        PumpUntil(() => window.ThumbnailList.SelectedIndex == 3 && window.ThumbnailList.ItemContainerGenerator.ContainerFromIndex(3) is ListBoxItem { IsVisible: true },
+            "page 4 selected in the list");
+        Pump(50);
+        Beside(window.ThumbnailList, (ListBoxItem)window.ThumbnailList.ItemContainerGenerator.ContainerFromIndex(3), "the selected thumbnail");
+
+        // An outline of eighty entries: it scrolls too.
+        var outlined = ShowWindow(WriteLongOutline());
+        outlined.SetSidebar(true, remember: false);
+        outlined.ShowOutlineInSidebar();
+        PumpUntil(() => outlined.OutlineTree.Items.Count > 0, "the outline");
+        Pump(100);
+        var first = (TreeViewItem)outlined.OutlineTree.ItemContainerGenerator.ContainerFromIndex(0);
+        first.IsSelected = true;
+        Pump(50);
+        Beside(outlined.OutlineTree, first, "the selected outline entry");
+
+        static void Beside(FrameworkElement list, FrameworkElement row, string what)
+        {
+            var bar = Descendants(list).OfType<System.Windows.Controls.Primitives.ScrollBar>()
+                .Single(b => b.Orientation == Orientation.Vertical);
+            Check(bar.IsVisible, $"{what}: the list scrolls, so its bar shows");
+            var highlight = Descendants(row).OfType<Border>().First(b => b.Name == "Bd");
+            var rowRight = highlight.TransformToAncestor(list).Transform(new Point(highlight.ActualWidth, 0)).X;
+            var barLeft = bar.TransformToAncestor(list).Transform(new Point(0, 0)).X;
+            Check(rowRight <= barLeft + 0.5, $"{what}: its highlight ends at {rowRight:0.#}, the bar begins at {barLeft:0.#}");
+        }
+    }
+
+    /// <summary>Three pages and an outline of eighty entries, one after another, each to a page.</summary>
+    private static string WriteLongOutline()
+    {
+        const int entries = 80;
+        var path = Path.Combine(Temp, "long-outline.pdf");
+        using var stream = new FileStream(path, FileMode.Create, FileAccess.Write);
+        var offsets = new SortedDictionary<int, long>();
+        void Raw(string text) => stream.Write(Encoding.Latin1.GetBytes(text));
+        void Obj(int n, string body)
+        {
+            offsets[n] = stream.Position;
+            Raw($"{n} 0 obj\n{body}\nendobj\n");
+        }
+
+        const int firstItem = 10;
+        Raw("%PDF-1.7\n");
+        Obj(1, "<< /Type /Catalog /Pages 2 0 R /Outlines 3 0 R /PageMode /UseOutlines >>");
+        Obj(2, "<< /Type /Pages /Kids [4 0 R 5 0 R 6 0 R] /Count 3 >>");
+        Obj(3, $"<< /Type /Outlines /First {firstItem} 0 R /Last {firstItem + entries - 1} 0 R /Count {entries} >>");
+        for (var page = 0; page < 3; page++) Obj(4 + page, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>");
+        for (var i = 0; i < entries; i++)
+        {
+            var n = firstItem + i;
+            var links = (i > 0 ? $" /Prev {n - 1} 0 R" : string.Empty) + (i < entries - 1 ? $" /Next {n + 1} 0 R" : string.Empty);
+            Obj(n, $"<< /Title (Section {i + 1}) /Parent 3 0 R{links} /Dest [{4 + (i % 3)} 0 R /Fit] >>");
+        }
+
+        var xref = stream.Position;
+        var size = offsets.Keys.Max() + 1;
+        Raw($"xref\n0 {size}\n0000000000 65535 f \n");
+        for (var n = 1; n < size; n++) Raw(offsets.TryGetValue(n, out var at) ? $"{at:D10} 00000 n \n" : "0000000000 65535 f \n");
+        Raw($"trailer\n<< /Size {size} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return path;
+    }
+
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    {
+        for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            yield return child;
+            foreach (var deeper in Descendants(child)) yield return deeper;
+        }
     }
 
     // ===================================================================== grids
@@ -491,6 +578,137 @@ internal static class NavigationChecks
         Equal(many.TrailPlaces().Count(p => p.Steps > 0), 0, "a new jump drops what was ahead");
         many.CloseDocument();
         Check(!many.TrailShown, "no trail without a document");
+    }
+
+    private static void TrailHoldsEachPageOnce()
+    {
+        // The history alone.
+        var history = new NavigationHistory();
+        ViewPosition At(int page) => new(page, 0, page);
+        string Pages() => string.Join(" ", history.BackEntries.Select(e => e.ShownPage)) + " | " +
+                          string.Join(" ", history.ForwardEntries.Reverse().Select(e => e.ShownPage));
+
+        // Back and forth between two pages by links: two places, not a growing pile.
+        history.Record(At(0));
+        history.Arrived(7);
+        history.Record(At(7));
+        history.Arrived(0);
+        Equal(Pages(), "7 | ", "0 to 7 and back by a link: the place left is 7, and 0 is here");
+        history.Record(At(0));
+        history.Arrived(7);
+        Equal(Pages(), "0 | ", "and again: still one place behind");
+
+        // A link to somewhere on the page being read adds nothing.
+        history.Record(At(7));
+        history.Arrived(7);
+        Equal(Pages(), "0 | ", "a jump within the page");
+
+        // A page already on the trail, reached again by a link: it is here now, not behind too.
+        history.Clear();
+        foreach (var (from, to) in new[] { (1, 5), (5, 9), (9, 5) })
+        {
+            history.Record(At(from));
+            history.Arrived(to);
+        }
+        Equal(Pages(), "1 9 | ", "1, 5, 9, then 5 again: behind are 1 and 9");
+
+        // Going back several at once passes visits on: none of them doubles up.
+        history.Clear();
+        foreach (var (from, to) in new[] { (1, 2), (2, 3), (3, 4) })
+        {
+            history.Record(At(from));
+            history.Arrived(to);
+        }
+        var landed = history.Go(-3, At(4))!.Value;
+        history.Arrived(landed.ShownPage);
+        Equal(Pages(), " | 2 3 4", "three back from 4: 1 here, 2, 3 and 4 ahead");
+        history.Record(At(1));
+        history.Arrived(3);
+        Equal(Pages(), "1 | ", "a new jump drops what was ahead");
+
+        // Back from a page scrolled to by hand that has a visit already goes past that visit.
+        history.Clear();
+        foreach (var (from, to) in new[] { (1, 4), (4, 8) })
+        {
+            history.Record(At(from));
+            history.Arrived(to);
+        }
+        Equal(history.StepsAway(-1, 4), -2, "on 4 by hand, Back goes to 1");
+        Equal(history.StepsAway(-1, 8), -1, "on 8, Back goes to 4");
+        Equal(history.StepsAway(1, 8), 0, "nothing ahead");
+
+        // In the window: page 1 to 3 by a link, back to 1 by page 3's "first page" button.
+        var window = ShowWindow(Fixture("links.pdf"));
+        var view = window.PageView;
+        Info(window, 0);
+        Click(window, view.ViewPointOf(0, 135 / 612.0, 175 / 792.0));
+        PumpUntil(() => view.CurrentPage == 2, "page 3");
+        Equal(Trail(window), "1 [3]", "the jump");
+        Info(window, 2);
+        Click(window, view.ViewPointOf(2, 120 / 612.0, 595 / 792.0));
+        PumpUntil(() => view.CurrentPage == 0, "back on page 1 by its button");
+        Equal(Trail(window), "3 [1]", "page 1 is here, not behind as well");
+        Click(window, view.ViewPointOf(0, 135 / 612.0, 175 / 792.0));
+        PumpUntil(() => view.CurrentPage == 2, "page 3 again");
+        Equal(Trail(window), "1 [3]", "back and forth: still two places");
+
+        // Scrolled by hand onto a page with a visit: one place for it, and Back goes past it.
+        view.GoToPage(1);
+        Equal(Trail(window), "1 3 [2]", "on to page 2");
+        view.GoToPage(2, record: false);
+        Pump(20);
+        Equal(Trail(window), "1 [3]", "back on 3 without a jump: its visit is this place");
+        Check(((string)window.TrailBackButton.ToolTip).Contains('1'), $"Back leads to page 1: {window.TrailBackButton.ToolTip}");
+        view.GoBack();
+        Equal(view.CurrentPage, 0, "Back: page 1, past the visit to the page already shown");
+        // Page 2 was left without a jump, so it is not a place; page 3 is ahead once.
+        Equal(Trail(window), "[1] 3", "and ahead, each page once");
+    }
+
+    private static void KeysTurnWholeSheets()
+    {
+        var window = ShowWindow(Pages30());
+        var view = window.PageView;
+
+        // Two stacked, fitted to the width: the sheet is far taller than the window.
+        window.SetPageDisplay(new PageGrid(1, 2));
+        view.SetMode(ZoomMode.FitWidth);
+        WaitForScreen(window);
+        Check(view.Layout!.SlotBottom(0) - view.ViewportPixelsHeight > view.Layout.SlotTop(0) + 100, "the sheet is taller than the window");
+        foreach (var (key, start) in new[] { (Key.Down, 2), (Key.Down, 4), (Key.Up, 2), (Key.PageDown, 4), (Key.PageUp, 2), (Key.Space, 4), (Key.Right, 6), (Key.Left, 4) })
+        {
+            view.HandleKey(key, ModifierKeys.None);
+            Equal(view.CurrentSheet, (start, start + 1), $"{key}: pages {start + 1} and {start + 2}");
+            Near(view.Offset.Y, view.Layout!.SlotTop(start), 0.5, $"{key}: the sheet from its top, not shifted");
+        }
+
+        // Zoomed in on a grid wider than the window: Right and Left still turn it.
+        window.SetPageDisplay(new PageGrid(3, 1));
+        view.SetZoom(view.Zoom * 2.5);
+        Pump(30);
+        Check(view.Layout!.ExtentWidth > view.ViewportPixelsWidth, "the sheet is wider than the window");
+        var first = view.CurrentSheet.First;
+        view.HandleKey(Key.Right, ModifierKeys.None);
+        Equal(view.CurrentSheet.First, first + 3, "Right: the next three pages");
+        view.HandleKey(Key.Left, ModifierKeys.None);
+        Equal(view.CurrentSheet.First, first, "Left: back three");
+
+        // Ctrl+Down still scrolls within a tall sheet; one page at a time keeps scrolling a tall page.
+        window.SetPageDisplay(new PageGrid(1, 2));
+        view.SetMode(ZoomMode.FitWidth);
+        Pump(30);
+        var top = view.Offset.Y;
+        var sheet = view.CurrentSheet;
+        view.HandleKey(Key.Down, ModifierKeys.Control);
+        Pump(400);
+        Check(view.Offset.Y > top && view.CurrentSheet == sheet, $"Ctrl+Down scrolls within the sheet: {top} to {view.Offset.Y}, {sheet} to {view.CurrentSheet}");
+        window.SetPageDisplay(PageGrid.One);
+        view.SetMode(ZoomMode.FitWidth);
+        view.GoToPage(0, record: false);
+        Pump(30);
+        view.HandleKey(Key.Down, ModifierKeys.None);
+        Pump(400);
+        Check(view.CurrentPage == 0 && view.Offset.Y > view.Layout!.SlotTop(0), "one page at a time, Down scrolls a tall page first");
     }
 
     private static string Trail(MainWindow window) =>

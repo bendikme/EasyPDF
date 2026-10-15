@@ -534,6 +534,7 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
         if (record) RecordJump(fromPage);
         _preferredPage = page;
         ScrollTo(XShowing(page, _offsetX), _layout.SlotTop(page), animate: false);
+        if (record) History.Arrived(page);
     }
 
     /// <summary>
@@ -645,17 +646,21 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
 
         // What the link points at must be in sight, not just its page (a /Fit jump shows the top).
         if (flash && target.Area is { } area && area != new PageRect(0, 0, 1, 1)) BringIntoView(page, area);
+        if (record) History.Arrived(page);
         if (flash) Flash(page, target);
     }
 
-    public void GoBack() => GoBy(-1);
+    /// <summary>Back to the place the last jump left - on another page than this one.</summary>
+    public void GoBack() => GoBy(History.StepsAway(-1, _currentPage));
 
-    public void GoForward() => GoBy(1);
+    public void GoForward() => GoBy(History.StepsAway(1, _currentPage));
 
     /// <summary>Back (negative) or forward through the places links have led, several at once.</summary>
     public void GoBy(int steps)
     {
-        if (History.Go(steps, CurrentPosition()) is { } p) ScrollToPosition(p, animate: false);
+        if (History.Go(steps, CurrentPosition()) is not { } p) return;
+        ScrollToPosition(p, animate: false);
+        History.Arrived(p.ShownPage);
     }
 
     /// <summary>Brings a rectangle on a page into view, centred if it is not already comfortably visible.</summary>
