@@ -259,13 +259,19 @@ internal static class NavigationChecks
         Equal(Shown(view), "0,1", "two stacked: the sheet with page 2 is pages 1 and 2");
         Check(view.Layout!.Top(1) > view.Layout.Bottom(0), "one above the other");
 
-        // A search match, a link and the outline: the sheet with the page.
+        // A page gone to: the sheet with it, and it is the current page, not the sheet's first.
         window.SetPageDisplay(new PageGrid(3, 3));
+        view.GoToPage(4, record: false);
+        Equal(view.CurrentPage, 4, "a page gone to on the sheet in view is the current page");
         view.GoToPage(20);
         WaitForScreen(window);
         Equal(Shown(view), "18,19,20,21,22,23,24,25,26", "the sheet with page 21");
+        Equal(view.CurrentPage, 20, "page 21 is the current page");
         view.GoBack();
         Equal(view.CurrentSheet.First, 0, "Back: the sheet it was left from");
+        Equal(view.CurrentPage, 4, "and the page it was on there");
+        view.HandleKey(Key.PageDown, ModifierKeys.None);
+        Equal(view.CurrentPage, 9, "a turn: the next sheet's first page");
 
         // Continuous again: one column, on the same page.
         window.SetPageDisplay(null);
@@ -449,6 +455,25 @@ internal static class NavigationChecks
 
         // The places are named by the outline.
         PumpUntil(() => window.SectionOf(2) is not null, "the outline read");
+
+        // A link on a page less in view than the one above it: the place left is the link's page.
+        view.SetZoom(0.5);
+        var layout = view.Layout!;
+        var linkY = layout.Top(1) + (115 / 792.0 * layout.Height(1));
+        view.ScrollTo(view.Offset.X, linkY - (0.8 * view.ViewportPixelsHeight), animate: false);
+        Pump(20);
+        Equal(view.CurrentPage, 0, "the page above is the one most in view");
+        Info(window, 1);
+        Click(window, view.ViewPointOf(1, 394 / 612.0, 115 / 792.0));
+        PumpUntil(() => view.Flashing is { Page: 2 }, "the link on page 2 followed");
+        Equal(view.History.BackEntries[^1].ShownPage, 1, "the place left is named by the link's page");
+        Check(Trail(window).EndsWith("2 [3]", StringComparison.Ordinal), $"the trail ends with it: {Trail(window)}");
+
+        // Pointed at, a place shows its page and the part of the document it is in.
+        var place = window.TrailChips.Children.OfType<Button>().First(b => b.Content is TextBlock { Text: "2" });
+        var preview = (StackPanel)place.ToolTip;
+        Check(preview.Children.OfType<ThumbnailImage>().Any(), "a picture of the page");
+        Check(preview.Children.OfType<TextBlock>().Any(t => t.Text == window.SectionOf(1)), "and its part of the document");
 
         // A long trail folds: three places either side of here, the rest in a menu.
         var many = ShowWindow(Pages30());

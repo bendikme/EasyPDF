@@ -344,11 +344,8 @@ public sealed class PageLayout
             double seen;
             if (Fixed)
             {
-                var across = Math.Min(right, _lefts[i] + _widths[i]) - Math.Max(left, _lefts[i]);
-                var down = Math.Min(bottom, Bottom(i)) - Math.Max(top, _tops[i]);
-                if (across <= 0 || down <= 0) continue;
-                seen = across * down / ((double)_widths[i] * _heights[i]);
-                if (seen <= bestSeen + 0.005) continue;
+                seen = SeenOf(i, left, top, right, bottom);
+                if (seen <= 0 || seen <= bestSeen + 0.005) continue;
             }
             else
             {
@@ -359,6 +356,14 @@ public sealed class PageLayout
             bestSeen = seen;
         }
         return best;
+    }
+
+    /// <summary>How much of a page is in the view [left, right) x [top, bottom), as a fraction of the page.</summary>
+    public double SeenOf(int page, double left, double top, double right, double bottom)
+    {
+        var across = Math.Min(right, _lefts[page] + _widths[page]) - Math.Max(left, _lefts[page]);
+        var down = Math.Min(bottom, Bottom(page)) - Math.Max(top, _tops[page]);
+        return across <= 0 || down <= 0 ? 0 : across * down / ((double)_widths[page] * _heights[page]);
     }
 
     /// <summary>Index of the first page whose bottom is below <paramref name="y"/>; Count if none.</summary>

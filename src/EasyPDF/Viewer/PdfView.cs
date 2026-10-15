@@ -69,6 +69,13 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
     private int _viewportHeight;
     private int _currentPage;
     private PageGrid? _grid;
+
+    /// <summary>
+    /// A sheet at a time, the page a jump went to (a link's, a page number's, Back's): the current
+    /// page while it is on the sheet in view and as much in sight as any other, rather than the
+    /// sheet's first. -1 for none.
+    /// </summary>
+    private int _preferredPage = -1;
     private ViewState? _pendingState;
     private bool _settling;
     private double _lastScrollDirection = 1;
@@ -177,6 +184,7 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
         _offsetX = 0;
         _offsetY = 0;
         _currentPage = 0;
+        _preferredPage = -1;
         _layout = null;
 
         if (document is null)
@@ -231,6 +239,7 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
             _mode = ZoomMode.FitPage;
         if (_mode != ZoomMode.Custom) _zoom = FitZoom(_mode);
         Relayout();
+        _preferredPage = page;
         _offsetY = _layout!.SlotTop(page);
         _offsetX = XShowing(page, _offsetX);
         ClampOffsets(page);
@@ -488,6 +497,7 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
         if (_layout is null || _document is null) return;
         var page = Math.Clamp(position.Page, 0, _layout.Count - 1);
         var offset = double.IsFinite(position.Offset) ? Math.Clamp(position.Offset, -1, 2) : 0;
+        _preferredPage = position.Seen;
         ScrollTo(XShowing(page, _offsetX), _layout.Top(page) + (offset * _layout.Height(page)), animate, page);
     }
 
@@ -508,12 +518,21 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
         return Math.Clamp(x, lo, hi);
     }
 
+    /// <summary>Remembers where the view is for Back - named by the page a link was followed from, when it was.</summary>
+    private void RecordJump(int fromPage)
+    {
+        var here = CurrentPosition();
+        History.Record((uint)fromPage < (uint)PageCount ? here with { Seen = fromPage } : here);
+    }
+
     /// <summary>Shows a page from its top, with the gap above it - the first page from the very top.</summary>
-    public void GoToPage(int page, bool record = true)
+    /// <param name="fromPage">The page of the link that leads there, if one does.</param>
+    public void GoToPage(int page, bool record = true, int fromPage = -1)
     {
         if (_layout is null || _document is null) return;
         page = Math.Clamp(page, 0, _document.PageCount - 1);
-        if (record) History.Record(CurrentPosition());
+        if (record) RecordJump(fromPage);
+        _preferredPage = page;
         ScrollTo(XShowing(page, _offsetX), _layout.SlotTop(page), animate: false);
     }
 
@@ -530,6 +549,7 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
         if (next == sheet) return;
         var page = layout.FirstOfSheet(next);
         var y = fromBottom && layout.Fixed ? layout.SheetBottom(next) - _viewportHeight : layout.SheetTop(next);
+        _preferredPage = -1;
         ScrollTo(XShowing(page, _offsetX), y, animate: false, page);
     }
 
@@ -586,21 +606,23 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
     /// Goes to a destination in this document: its page, and the point on it when the destination
     /// names one. <paramref name="flash"/> marks the place for a moment, as a followed link does.
     /// </summary>
-    public async Task NavigateAsync(PdfDestination destination, bool record = true, bool flash = false)
+    /// <param name="fromPage">The page of the link followed, if one was.</param>
+    public async Task NavigateAsync(PdfDestination destination, bool record = true, bool flash = false, int fromPage = -1)
     {
         var document = _document;
         if (document is null) return;
 
         var resolved = await document.ResolveAsync(destination).ConfigureAwait(true);
         if (resolved is not { } target || !ReferenceEquals(document, _document)) return;
-        ShowDestination(target, record, flash);
+        ShowDestination(target, record, flash, fromPage);
     }
 
-    public void ShowDestination(ResolvedDestination target, bool record = true, bool flash = false)
+    public void ShowDestination(ResolvedDestination target, bool record = true, bool flash = false, int fromPage = -1)
     {
         if (_layout is null || _document is null) return;
         var page = Math.Clamp(target.PageIndex, 0, _document.PageCount - 1);
-        if (record) History.Record(CurrentPosition());
+        if (record) RecordJump(fromPage);
+        _preferredPage = page;
 
         var layout = _layout;
         var x = XShowing(page, _offsetX);
@@ -647,6 +669,7 @@ public sealed partial class PdfView : FrameworkElement, IScrollInfo
         var margin = Px(40);
         var x = _offsetX;
         var y = _offsetY;
+        _preferredPage = page;
         if (top < _offsetY + margin || top + rh > _offsetY + _viewportHeight - margin)
             y = top + (rh / 2) - (_viewportHeight / 2.0);
         if (left < _offsetX + margin || left + rw > _offsetX + _viewportWidth - margin)

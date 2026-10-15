@@ -36,6 +36,7 @@ public sealed partial class PdfView
     private bool _pointerInside;
     private PdfLink? _pressLink;
     private bool _pressOnText;
+    private int _pressPage = -1;
     private double _panStartX;
     private double _panStartY;
     private LinkTarget? _hoverTarget;
@@ -220,9 +221,11 @@ public sealed partial class PdfView
         _pressLink = null;
         _pressOnText = false;
         _pressInfoMissing = false;
+        _pressPage = -1;
 
         if (DocumentPoint(point) is { Inside: true } hit)
         {
+            _pressPage = hit.Page;
             if (InfoFor(hit.Page) is { } info)
             {
                 var (sx, sy) = Slack(hit.Page, 1);
@@ -269,7 +272,7 @@ public sealed partial class PdfView
         {
             if (link is not null)
             {
-                Activate(link.Target);
+                Activate(link.Target, _pressPage);
             }
             else
             {
@@ -295,7 +298,7 @@ public sealed partial class PdfView
     {
         if (InfoFor(page) is not { } info) return;
         var (sx, sy) = Slack(page, 1);
-        if (info.LinkAt(x, y, Math.Max(sx, sy)) is { } link) Activate(link.Target);
+        if (info.LinkAt(x, y, Math.Max(sx, sy)) is { } link) Activate(link.Target, page);
     }
 
     private void CompletePendingClick(int page)
@@ -421,11 +424,12 @@ public sealed partial class PdfView
     }
 
     /// <summary>Follows a link: inside the document here, anything else through <see cref="LinkActivated"/>.</summary>
-    public void Activate(LinkTarget target)
+    /// <param name="fromPage">The page the link is on, when it was clicked there: what the trail of jumps calls the place left.</param>
+    public void Activate(LinkTarget target, int fromPage = -1)
     {
         if (target is GoToTarget go)
         {
-            _ = NavigateAsync(go.Destination, flash: true);
+            _ = NavigateAsync(go.Destination, flash: true, fromPage: fromPage);
             return;
         }
         if (target is NamedActionTarget named && RunNamedAction(named)) return;
@@ -441,22 +445,22 @@ public sealed partial class PdfView
         {
             // A sheet at a time, the next sheet: the next page may be beside this one already.
             case NamedAction.NextPage when _layout is { Fixed: true } sheets:
-                if (sheets.SheetOf(from) + 1 < sheets.SheetCount) GoToPage(sheets.FirstOfSheet(sheets.SheetOf(from) + 1));
+                if (sheets.SheetOf(from) + 1 < sheets.SheetCount) GoToPage(sheets.FirstOfSheet(sheets.SheetOf(from) + 1), fromPage: from);
                 return true;
             case NamedAction.PrevPage when _layout is { Fixed: true } sheets:
-                if (sheets.SheetOf(from) > 0) GoToPage(sheets.FirstOfSheet(sheets.SheetOf(from) - 1));
+                if (sheets.SheetOf(from) > 0) GoToPage(sheets.FirstOfSheet(sheets.SheetOf(from) - 1), fromPage: from);
                 return true;
             case NamedAction.NextPage:
-                if (from + 1 < document.PageCount) GoToPage(from + 1);
+                if (from + 1 < document.PageCount) GoToPage(from + 1, fromPage: from);
                 return true;
             case NamedAction.PrevPage:
-                if (from > 0) GoToPage(from - 1);
+                if (from > 0) GoToPage(from - 1, fromPage: from);
                 return true;
             case NamedAction.FirstPage:
-                GoToPage(0);
+                GoToPage(0, fromPage: from);
                 return true;
             case NamedAction.LastPage:
-                GoToPage(document.PageCount - 1);
+                GoToPage(document.PageCount - 1, fromPage: from);
                 return true;
             case NamedAction.GoBack:
                 GoBack();
@@ -707,7 +711,7 @@ public sealed partial class PdfView
         if (InfoFor(hit.Page) is { } info)
         {
             var (sx, sy) = Slack(hit.Page, 6);
-            if (info.LinkAt(hit.X, hit.Y, Math.Max(sx, sy)) is { } link) Activate(link.Target);
+            if (info.LinkAt(hit.X, hit.Y, Math.Max(sx, sy)) is { } link) Activate(link.Target, hit.Page);
         }
         else
         {

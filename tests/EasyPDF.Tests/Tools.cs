@@ -230,16 +230,34 @@ internal static class Tools
             Snap(flash, Path.Combine(dir, $"single-{name}.png"));
             flash.Close();
 
-            // The trail of jumps over a grid of four pages, the sidebar compact: on the schematic
-            // at the workspace's root when it is there.
-            var real = Path.GetFullPath(Path.Combine(Fixtures, "..", "..", "Palletering 20261009.pdf"));
-            var many = File.Exists(real) ? real : BigPdfWriter.Write(Path.Combine(Temp, "shots30.pdf"), 30, []);
+            // The trail of jumps over a grid of four pages, the sidebar compact: on a real schematic
+            // when one is given (--screenshot <folder> <schematic.pdf>), otherwise on plain pages.
+            var real = args.Length > 1 ? Path.GetFullPath(args[1]) : null;
+            var many = real is not null && File.Exists(real) ? real : BigPdfWriter.Write(Path.Combine(Temp, "shots30.pdf"), 30, []);
             var grid = App.OpenEmptyWindow(null);
             grid.Width = 1380;
             grid.Height = 860;
             Await(grid.OpenAsync(many), 60000);
             grid.SetSidebar(true, remember: false);
             grid.SetCompactSidebar(true);
+
+            // A cross-reference followed: the element it refers to framed, the trail above.
+            if (many == real)
+            {
+                var view = grid.PageView;
+                view.GoToPage(1000);
+                view.RequestPageInfo(1000, JobPriority.Interactive);
+                PumpUntil(() => view.InfoFor(1000) is { MoreLinksPending: null }, "links", 60000);
+                if (view.InfoFor(1000)!.Links.FirstOrDefault(l => l.Target is GoToTarget { Destination.Mark: not null }) is { } reference)
+                {
+                    view.Activate(reference.Target, 1000);
+                    PumpUntil(() => view.Flashing is not null && view.IsScreenComplete() && !view.Tiles.IsBusy, "the mark", 60000);
+                    Pump(100);
+                    Console.WriteLine($"     jumped to page {view.Flashing!.Value.Page + 1}, marked {view.Flashing.Value.Area}");
+                    Snap(grid, Path.Combine(dir, $"jump-{name}.png"));
+                }
+            }
+
             foreach (var page in new[] { 4, 11, 20 }) grid.PageView.GoToPage(page);
             grid.SetPageDisplay(new EasyPDF.Viewer.PageGrid(2, 2));
             grid.PageView.HandleKey(System.Windows.Input.Key.PageDown, System.Windows.Input.ModifierKeys.None);

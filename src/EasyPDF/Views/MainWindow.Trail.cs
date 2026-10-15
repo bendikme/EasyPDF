@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media.Animation;
 using EasyPDF.Pdf;
 using EasyPDF.Resources;
 using EasyPDF.Services;
@@ -28,10 +29,41 @@ public partial class MainWindow
     /// <summary>The outline's entries by the page each leads to, in page order: what part of the document a page is in.</summary>
     private (int Page, string Title)[] _sections = [];
 
+    /// <summary>How long the trail stays bright after it changes, or after the pointer leaves it, before it dims.</summary>
+    private static readonly TimeSpan TrailAwake = TimeSpan.FromSeconds(4);
+
+    private static readonly TimeSpan TrailAwakeAfterPointer = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>Dimmed, the trail is still there to see, without hiding what is under it.</summary>
+    private const double TrailDimmed = 0.42;
+
     private void InitializeTrail()
     {
         View.History.Recorded += (_, _) => _trailDismissed = false;
         View.History.Changed += (_, _) => RefreshTrail();
+        TrailBar.MouseEnter += (_, _) =>
+        {
+            TrailBar.BeginAnimation(OpacityProperty, null);
+            TrailBar.Opacity = 1;
+        };
+        TrailBar.MouseLeave += (_, _) => WakeTrail(TrailAwakeAfterPointer);
+    }
+
+    /// <summary>Bright for a while, then dimmed; not while the pointer is on it.</summary>
+    private void WakeTrail(TimeSpan awake)
+    {
+        if (TrailBar.IsMouseOver)
+        {
+            TrailBar.BeginAnimation(OpacityProperty, null);
+            TrailBar.Opacity = 1;
+            return;
+        }
+        var fade = new DoubleAnimationUsingKeyFrames { Duration = awake + TimeSpan.FromMilliseconds(500) };
+        fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(120))));
+        fade.KeyFrames.Add(new LinearDoubleKeyFrame(1, KeyTime.FromTimeSpan(awake)));
+        fade.KeyFrames.Add(new LinearDoubleKeyFrame(TrailDimmed, KeyTime.FromTimeSpan(awake + TimeSpan.FromMilliseconds(500))));
+        fade.Freeze();
+        TrailBar.BeginAnimation(OpacityProperty, fade);
     }
 
     /// <summary>The trail's places, in order: behind (oldest first), here, ahead (nearest first), each with how many steps away it is.</summary>
@@ -61,11 +93,14 @@ public partial class MainWindow
         _trailHere = null;
         if (_document is null || _trailDismissed || !(history.CanGoBack || history.CanGoForward))
         {
+            // Its animation goes with it: a running one would hold the window a moment longer.
+            TrailBar.BeginAnimation(OpacityProperty, null);
             TrailBar.Visibility = Visibility.Collapsed;
             return;
         }
 
         TrailBar.Visibility = Visibility.Visible;
+        WakeTrail(TrailAwake);
         TrailBackButton.IsEnabled = history.CanGoBack;
         TrailForwardButton.IsEnabled = history.CanGoForward;
         TrailBackButton.ToolTip = history.CanGoBack

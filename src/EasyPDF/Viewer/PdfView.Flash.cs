@@ -8,9 +8,9 @@ namespace EasyPDF.Viewer;
 
 /// <summary>
 /// After a link is followed, the place it leads to is marked for a moment so the eye finds it: a
-/// red frame that blinks three times and fades. It goes round the line of text the destination
-/// points at, the area it names (a /FitR destination), or the whole page when the link names only
-/// a page - as an EPLAN schematic's cross-references do.
+/// red frame that blinks three times and fades. It goes round the element the document marks
+/// itself (an EPLAN cross-reference names the button that refers back - see PdfMark), the line of
+/// text the destination points at, the area it names (a /FitR destination), or else the whole page.
 /// </summary>
 public sealed partial class PdfView
 {

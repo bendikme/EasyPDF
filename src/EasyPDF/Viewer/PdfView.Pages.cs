@@ -143,6 +143,14 @@ public sealed partial class PdfView
         }
 
         var current = layout.MostVisible(ox, oy, ox + _viewportWidth, oy + _viewportHeight);
+        if (layout.Fixed && (uint)_preferredPage < (uint)layout.Count)
+        {
+            // A sheet at a time, the page gone to stays the current one while it is as much in view as any.
+            if (layout.SheetOf(_preferredPage) != layout.SheetOf(current)) _preferredPage = -1;
+            else if (layout.SeenOf(_preferredPage, ox, oy, ox + _viewportWidth, oy + _viewportHeight) >=
+                     layout.SeenOf(current, ox, oy, ox + _viewportWidth, oy + _viewportHeight) - 0.005)
+                current = _preferredPage;
+        }
         var pageChanged = current != _currentPage;
         _currentPage = current;
 
