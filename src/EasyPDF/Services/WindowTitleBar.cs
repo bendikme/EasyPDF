@@ -18,6 +18,13 @@ public static class WindowTitleBar
     private const int DwmwaBorderColor = 34;
     private const int DwmwaCaptionColor = 35;
 
+    /// <summary>
+    /// Whether Windows draws a window's border over the edge of its content: Windows 11 does, one
+    /// pixel wide and in the colour set here, round every window that is not maximized - over the
+    /// top row of a window without a title bar too. Windows 10 draws none round such a window.
+    /// </summary>
+    public static bool BorderCoversEdge { get; } = OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000);
+
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 

@@ -44,6 +44,7 @@ internal static class ViewerChecks
         ("The same file opens once, in one window", OpenOnce),
         ("Sidebar thumbnails render", Thumbnails),
         ("The header folds into the more menu as the window narrows", HeaderFolds),
+        ("The header's controls and text are centred in the strip in sight", HeaderCentred),
         ("Printing draws text and form fields", PrintsToDeviceContext),
         ("Every dialog and menu builds, in both languages", DialogsAndMenus),
         ("Full screen hides the chrome and gives the window back", FullScreen),
@@ -945,6 +946,56 @@ internal static class ViewerChecks
         Check(window.PrintButton.Visibility == Visibility.Visible, "back when wide again");
     }
 
+    private static void HeaderCentred()
+    {
+        var window = ShowWindow("links.pdf", 1300);
+        var header = window.Header;
+
+        // The strip in sight: below the border Windows 11 draws over the window's top pixel, above
+        // the header's own line.
+        var scale = VisualTreeHelper.GetDpi(window).DpiScaleY;
+        var top = WindowTitleBar.BorderCoversEdge ? 1 / scale : 0;
+        Near(header.Padding.Top, top, 1e-9, "the header clears the window's border");
+        // Exact at a whole scale; at 125% or 150% layout rounding can leave half a pixel either way.
+        var tolerance = scale % 1 == 0 ? 1e-9 : 0.5 / scale;
+        var bottom = header.ActualHeight - header.BorderThickness.Bottom;
+        Near(bottom - top, 42, tolerance, "the strip's height");
+        var middle = (top + bottom) / 2;
+
+        // Text in a box on the baseline of the text beside it. A TextBlock's line starts at its top,
+        // and WPF draws every baseline on a whole pixel.
+        int Baseline(FrameworkElement text, double lineTop) =>
+            (int)Math.Round((text.TranslatePoint(new Point(0, lineTop), header).Y
+                + (System.Windows.Documents.TextElement.GetFontFamily(text).Baseline * System.Windows.Documents.TextElement.GetFontSize(text))) * scale);
+        int BoxBaseline(System.Windows.Controls.TextBox box) => Baseline(box, box.GetRectFromCharacterIndex(0).Top);
+        Equal(BoxBaseline(window.SearchBox), Baseline(window.SearchPlaceholder, 0), "typed text on the placeholder's baseline");
+        Equal(BoxBaseline(window.PageBox), Baseline(window.PageCountText, 0), "the page number on the baseline of \"of N\"");
+
+        // With the search tools showing too.
+        window.SearchBox.Text = "page";
+        PumpUntil(() => window.Search is { IsComplete: true }, "search");
+        Pump(30);
+        Check(window.SearchTools.IsVisible, "the search tools show");
+
+        FrameworkElement[] boxes =
+        [
+            window.SearchBox, window.OpenButton, window.ToolbarSeparator, window.SidebarButton, window.PageBox, window.ZoomButton,
+            window.FitButton, window.PagesButton, window.RotateButton, window.PrintButton, window.MoreButton, window.MaximizeButton,
+        ];
+        foreach (var element in boxes.Concat(Descendants(header).OfType<IconPath>()).Where(e => e.IsVisible))
+        {
+            var centre = element.TranslatePoint(new Point(0, element.ActualHeight / 2), header).Y;
+            Near(centre, middle, tolerance, $"{Describe(element)} centred");
+        }
+
+        static string Describe(FrameworkElement element)
+        {
+            DependencyObject? node = element;
+            while (node is FrameworkElement { Name.Length: 0 } or FrameworkElement { TemplatedParent: not null }) node = VisualTreeHelper.GetParent(node);
+            return node is FrameworkElement named && named != element ? $"an icon in {named.Name}" : element.Name;
+        }
+    }
+
     private static void DialogsAndMenus()
     {
         foreach (var language in new[] { "en", "nb" })
@@ -990,6 +1041,7 @@ internal static class ViewerChecks
     {
         var window = ShowWindow("links.pdf");
         var before = new Rect(window.Left, window.Top, window.Width, window.Height);
+        var header = window.HeaderRow.Height.Value;
         window.SetSidebar(true, remember: false);
 
         window.ToggleFullScreen();
@@ -1002,7 +1054,7 @@ internal static class ViewerChecks
         window.ToggleFullScreen();
         Pump(50);
         Check(!window.IsFullScreen, "out of full screen");
-        Equal(window.HeaderRow.Height.Value, 44.0, "header back");
+        Equal(window.HeaderRow.Height.Value, header, "header back");
         Check(window.IsSidebarOpen, "sidebar back");
         Equal(new Rect(window.Left, window.Top, window.Width, window.Height), before, "the window is back where it was");
         WaitForScreen(window);

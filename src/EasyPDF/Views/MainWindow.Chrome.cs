@@ -33,7 +33,9 @@ public partial class MainWindow
     private const int SmCyFrame = 33;
     private const int SmCxPaddedBorder = 92;
 
-    private const double CaptionHeight = 44;
+    /// <summary>The strip the header's controls are centred in, and the line under it.</summary>
+    private const double HeaderStripHeight = 42;
+    private const double HeaderDividerHeight = 1;
 
     private bool _maximizePressed;
     private bool _trackingNcLeave;
@@ -61,7 +63,7 @@ public partial class MainWindow
                 SetWindowPos(source.Handle, IntPtr.Zero, 0, 0, 0, 0,
                     SwpNoSize | SwpNoMove | SwpNoZOrder | SwpNoOwnerZOrder | SwpNoActivate | SwpFrameChanged);
             }
-            FitMaximized();
+            FitFrame();
         }
         catch (Exception ex)
         {
@@ -74,13 +76,13 @@ public partial class MainWindow
         base.OnStateChanged(e);
         if (_fullScreen && WindowState == WindowState.Minimized) return;
         if (_fullScreen && WindowState == WindowState.Maximized) ExitFullScreen();
-        FitMaximized();
+        FitFrame();
     }
 
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
     {
         base.OnDpiChanged(oldDpi, newDpi);
-        FitMaximized();
+        FitFrame();
     }
 
     private void OnMinimizeClick(object sender, RoutedEventArgs e) => SystemCommands.MinimizeWindow(this);
@@ -96,13 +98,19 @@ public partial class MainWindow
         else SystemCommands.MaximizeWindow(this);
     }
 
-    /// <summary>Pulls the content in by the frame Windows adds around a maximized window.</summary>
-    private void FitMaximized()
+    /// <summary>
+    /// Fits the content to what Windows draws round it: pulls it in by the frame Windows adds
+    /// round a maximized window, and moves the header's controls clear of the border Windows 11
+    /// draws over the top row of a window that is not - so they sit centred in the strip that is
+    /// in sight, whichever it is.
+    /// </summary>
+    private void FitFrame()
     {
         try
         {
             if (Content is not FrameworkElement root) return;
 
+            var scale = VisualTreeHelper.GetDpi(this);
             var inset = new Thickness(0);
             if (WindowState == WindowState.Maximized && !_fullScreen)
             {
@@ -111,20 +119,25 @@ public partial class MainWindow
                 {
                     var dpi = GetDpiForWindow(hwnd);
                     var padded = GetSystemMetricsForDpi(SmCxPaddedBorder, dpi);
-                    var scale = VisualTreeHelper.GetDpi(this);
                     var x = (GetSystemMetricsForDpi(SmCxFrame, dpi) + padded) / scale.DpiScaleX;
                     var y = (GetSystemMetricsForDpi(SmCyFrame, dpi) + padded) / scale.DpiScaleY;
                     inset = new Thickness(x, y, x, y);
                 }
             }
 
+            // One device pixel, at any scale.
+            var border = WindowTitleBar.BorderCoversEdge && WindowState == WindowState.Normal ? 1 / scale.DpiScaleY : 0;
+            var header = _fullScreen ? 0 : border + HeaderStripHeight + HeaderDividerHeight;
+            Header.Padding = new Thickness(0, border, 0, 0);
+            HeaderRow.Height = new GridLength(header);
+
             root.Margin = inset;
             if (WindowChrome.GetWindowChrome(this) is { } chrome)
-                chrome.CaptionHeight = _fullScreen ? 0 : CaptionHeight + inset.Top;
+                chrome.CaptionHeight = _fullScreen ? 0 : header + inset.Top;
         }
         catch (Exception ex)
         {
-            AppLog.Debug_($"Fitting the maximized window failed: {ex.Message}");
+            AppLog.Debug_($"Fitting the window to its frame failed: {ex.Message}");
         }
     }
 
@@ -151,12 +164,11 @@ public partial class MainWindow
         _restoreSidebar = IsSidebarOpen;
         _fullScreen = true;
 
-        HeaderRow.Height = new GridLength(0);
         Header.Visibility = Visibility.Collapsed;
         SetSidebar(false, remember: false);
         ResizeMode = ResizeMode.NoResize;
         WindowState = WindowState.Normal;
-        FitMaximized();
+        FitFrame();
 
         // The monitor in device pixels, placed in WPF's units for this window.
         var scale = VisualTreeHelper.GetDpi(this);
@@ -172,7 +184,6 @@ public partial class MainWindow
         if (!_fullScreen) return;
         _fullScreen = false;
 
-        HeaderRow.Height = new GridLength(CaptionHeight);
         Header.Visibility = Visibility.Visible;
         ResizeMode = ResizeMode.CanResize;
         if (_restoreBounds.Width > 0)
@@ -184,7 +195,7 @@ public partial class MainWindow
         }
         if (_restoreState == WindowState.Maximized) WindowState = WindowState.Maximized;
         SetSidebar(_restoreSidebar && HasDocument, remember: false);
-        FitMaximized();
+        FitFrame();
     }
 
     // ===================================================================== messages

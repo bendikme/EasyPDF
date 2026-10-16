@@ -17,7 +17,8 @@
         AllowDrop="True">
 
     <!-- No Windows title bar: the header strip below is the caption, with the window buttons at
-         its right edge. The one-pixel glass edge is what keeps the Windows shadow and corners. -->
+         its right edge. The one-pixel glass edge is what keeps the Windows shadow and corners.
+         The caption's height follows the header's, which FitFrame sets for the window's state. -->
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="44"
                       ResizeBorderThickness="6"
@@ -33,7 +34,7 @@
              ================================================================ -->
 
         <PathGeometry x:Key="GeoSearch" Figures="M4,10.5 A6.5,6.5 0 1 1 17,10.5 A6.5,6.5 0 1 1 4,10.5 Z M15.4,15.4 L20,20" />
-        <PathGeometry x:Key="GeoFolder" Figures="M3,6 L9,6 L11,9 L21,9 L21,19 L3,19 Z" />
+        <PathGeometry x:Key="GeoFolder" Figures="M3,5.5 L9,5.5 L11,8.5 L21,8.5 L21,18.5 L3,18.5 Z" />
         <PathGeometry x:Key="GeoSidebar" Figures="M3,5 L21,5 L21,19 L3,19 Z M9.5,5 L9.5,19" />
         <PathGeometry x:Key="GeoPlus" Figures="M12,5 L12,19 M5,12 L19,12" />
         <PathGeometry x:Key="GeoMinus" Figures="M5,12 L19,12" />
@@ -438,10 +439,13 @@
                 <!-- Find in the document. The count and the previous/next buttons appear inside the box once there is something to find. -->
                 <Grid x:Name="SearchArea" Grid.Column="1" Margin="24,0,16,0" VerticalAlignment="Center"
                       WindowChrome.IsHitTestVisibleInChrome="True" SizeChanged="OnSearchAreaSizeChanged">
-                    <!-- A short undo history: the box is also set from code, and every setting would be kept for ever. -->
+                    <!-- A short undo history: the box is also set from code, and every setting would be kept for ever.
+                         A pixel more padding below than above, here and in the page box: a TextBox centres its line
+                         exactly where a TextBlock's is rounded to whole pixels, and without it the typed text would
+                         sit a pixel below the placeholder, and the page number below "of N" beside it. -->
                     <TextBox x:Name="SearchBox" UndoLimit="32"
                              Style="{StaticResource AppTextBoxStyle}"
-                             Padding="32,5,30,5"
+                             Padding="32,5,30,6"
                              IsEnabled="False"
                              AutomationProperties.Name="{x:Static res:Strings.Main_Search_Placeholder}"
                              ToolTip="{x:Static res:Strings.Main_Search_Tooltip}"
@@ -467,11 +471,11 @@
                                    Foreground="{DynamicResource TextMutedBrush}" />
                         <Button Style="{StaticResource SearchNavButtonStyle}" Click="OnSearchPrevious"
                                 ToolTip="{x:Static res:Strings.Main_Search_Previous}" AutomationProperties.Name="{x:Static res:Strings.Main_Search_Previous}">
-                            <views:IconPath Width="11" Height="11" Data="{StaticResource GeoChevronUp}" StrokeThickness="2.2" />
+                            <views:IconPath Width="12" Height="12" Data="{StaticResource GeoChevronUp}" StrokeThickness="2" />
                         </Button>
                         <Button Style="{StaticResource SearchNavButtonStyle}" Click="OnSearchNext"
                                 ToolTip="{x:Static res:Strings.Main_Search_Next}" AutomationProperties.Name="{x:Static res:Strings.Main_Search_Next}">
-                            <views:IconPath Width="11" Height="11" Data="{StaticResource GeoChevronDown}" StrokeThickness="2.2" />
+                            <views:IconPath Width="12" Height="12" Data="{StaticResource GeoChevronDown}" StrokeThickness="2" />
                         </Button>
                         <Button Style="{StaticResource SearchNavButtonStyle}" Click="OnSearchClear"
                                 ToolTip="{x:Static res:Strings.Main_Search_Clear}" AutomationProperties.Name="{x:Static res:Strings.Main_Search_Clear}">
@@ -505,7 +509,7 @@
                                 Click="OnSidebarClick"
                                 AutomationProperties.Name="{x:Static res:Strings.Main_Sidebar}"
                                 ToolTip="{x:Static res:Strings.Main_Sidebar_Tooltip}">
-                            <views:IconPath Width="15" Height="15" Data="{StaticResource GeoSidebar}" />
+                            <views:IconPath Width="16" Height="16" Data="{StaticResource GeoSidebar}" StrokeThickness="1.6" />
                         </Button>
 
                         <!-- Page number: type one and press Enter. -->
@@ -515,7 +519,7 @@
                                      Style="{StaticResource AppTextBoxStyle}"
                                      Width="52"
                                      MinHeight="28"
-                                     Padding="4,3"
+                                     Padding="4,3,4,4"
                                      TextAlignment="Center"
                                      MaxLength="9"
                                      AutomationProperties.Name="{x:Static res:Strings.Main_Page}"
@@ -533,7 +537,7 @@
                                 Click="OnZoomOutClick"
                                 AutomationProperties.Name="{x:Static res:Strings.Main_ZoomOut}"
                                 ToolTip="{x:Static res:Strings.Main_ZoomOut_Tooltip}">
-                            <views:IconPath Width="13" Height="13" Data="{StaticResource GeoMinus}" StrokeThickness="2" />
+                            <views:IconPath Width="14" Height="14" Data="{StaticResource GeoMinus}" StrokeThickness="1.85" />
                         </Button>
 
                         <Button x:Name="ZoomButton"
@@ -546,7 +550,7 @@
                                 ToolTip="{x:Static res:Strings.Main_Zoom_Tooltip}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="ZoomText" Text="100%" VerticalAlignment="Center" />
-                                <views:IconPath Width="9" Height="9" Margin="5,1,0,0" VerticalAlignment="Center" Data="{StaticResource GeoChevronDown}" StrokeThickness="2.4" />
+                                <views:IconPath Width="10" Height="10" Margin="5,0,0,0" VerticalAlignment="Center" Data="{StaticResource GeoChevronDown}" StrokeThickness="2.15" />
                             </StackPanel>
                         </Button>
 
@@ -557,7 +561,7 @@
                                 Click="OnZoomInClick"
                                 AutomationProperties.Name="{x:Static res:Strings.Main_ZoomIn}"
                                 ToolTip="{x:Static res:Strings.Main_ZoomIn_Tooltip}">
-                            <views:IconPath Width="13" Height="13" Data="{StaticResource GeoPlus}" StrokeThickness="2" />
+                            <views:IconPath Width="14" Height="14" Data="{StaticResource GeoPlus}" StrokeThickness="1.85" />
                         </Button>
 
                         <Button x:Name="FitButton"
@@ -568,7 +572,7 @@
                                 Click="OnFitClick"
                                 AutomationProperties.Name="{x:Static res:Strings.Main_FitWidth}"
                                 ToolTip="{x:Static res:Strings.Main_FitWidth_Tooltip}">
-                            <views:IconPath Width="15" Height="15" x:Name="FitIcon" Data="{StaticResource GeoFitWidth}" />
+                            <views:IconPath Width="16" Height="16" x:Name="FitIcon" Data="{StaticResource GeoFitWidth}" StrokeThickness="1.6" />
                         </Button>
 
                         <Button x:Name="PagesButton"
@@ -589,7 +593,7 @@
                                 Click="OnRotateClick"
                                 AutomationProperties.Name="{x:Static res:Strings.Main_Rotate}"
                                 ToolTip="{x:Static res:Strings.Main_Rotate_Tooltip}">
-                            <views:IconPath Width="15" Height="15" Data="{StaticResource GeoRotate}" />
+                            <views:IconPath Width="16" Height="16" Data="{StaticResource GeoRotate}" StrokeThickness="1.6" />
                         </Button>
 
                         <Button x:Name="PrintButton"
@@ -599,7 +603,7 @@
                                 Click="OnPrintClick"
                                 AutomationProperties.Name="{x:Static res:Strings.Main_Print}"
                                 ToolTip="{x:Static res:Strings.Main_Print_Tooltip}">
-                            <views:IconPath Width="15" Height="15" Data="{StaticResource GeoPrint}" />
+                            <views:IconPath Width="16" Height="16" Data="{StaticResource GeoPrint}" StrokeThickness="1.6" />
                         </Button>
                     </StackPanel>
 
@@ -626,7 +630,7 @@
                             Click="OnMoreClick"
                             AutomationProperties.Name="{x:Static res:Strings.Main_More}"
                             ToolTip="{x:Static res:Strings.Main_More}">
-                        <views:IconPath Width="15" Height="15" Data="M5,12 L5.01,12 M12,12 L12.01,12 M19,12 L19.01,12" StrokeThickness="2.6" />
+                        <views:IconPath Width="16" Height="16" Data="M5,12 L5.01,12 M12,12 L12.01,12 M19,12 L19.01,12" StrokeThickness="2.45" />
                     </Button>
                 </StackPanel>
 

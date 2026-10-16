@@ -90,7 +90,7 @@ public partial class MainWindow
     private void FitSearchPadding()
     {
         var right = SearchTools.IsVisible ? SearchTools.ActualWidth + SearchTools.Margin.Right + 6 : 30;
-        SearchBox.Padding = new Thickness(32, 5, right, 5);
+        SearchBox.Padding = SearchBox.Padding with { Right = right };
     }
 
     private void OnSearchNext(object sender, RoutedEventArgs e) => MoveMatch(+1);

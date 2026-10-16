@@ -270,16 +270,6 @@ internal static class NavigationChecks
         return path;
     }
 
-    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
-    {
-        for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
-        {
-            var child = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
-            yield return child;
-            foreach (var deeper in Descendants(child)) yield return deeper;
-        }
-    }
-
     // ===================================================================== grids
 
     private static void PageGrids()
