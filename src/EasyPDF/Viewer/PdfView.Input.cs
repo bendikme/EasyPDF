@@ -745,7 +745,13 @@ public sealed partial class PdfView
         copy.Click += async (_, _) => await CopySelectionAsync().ConfigureAwait(true);
         menu.Items.Add(copy);
 
-        if (link is not (null or NamedActionTarget) && LinkText(link) is { Length: > 0 } address)
+        if (link is ModelTarget model)
+        {
+            var show = new MenuItem { Header = Strings.View_ShowModel };
+            show.Click += (_, _) => Activate(model);
+            menu.Items.Add(show);
+        }
+        else if (link is not (null or NamedActionTarget) && LinkText(link) is { Length: > 0 } address)
         {
             var copyLink = new MenuItem { Header = link is GoToTarget ? Strings.View_CopyLinkPage : Strings.View_CopyLink };
             copyLink.Click += (_, _) => ClipboardText.TrySet(address);
@@ -784,6 +790,7 @@ public sealed partial class PdfView
         LaunchTarget l => l.Path,
         RemoteGoToTarget r => r.Path,
         GoToTarget g => UiLanguage.Format(Strings.View_LinkPage, g.Destination.PageIndex + 1),
+        ModelTarget => Strings.View_LinkModel,
         NamedActionTarget n => n.Action switch
         {
             NamedAction.NextPage => Strings.View_Action_NextPage,

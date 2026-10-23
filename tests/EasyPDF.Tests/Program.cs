@@ -60,6 +60,8 @@ public static partial class Program
             if (args.Length > 0 && args[0] == "--bench") return Tools.Bench(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--diag-file") return Tools.DiagFile(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--prc") return PrcTool.Run(args.Skip(1).ToArray());
+            if (args.Length > 0 && args[0] == "--model-cost") return PrcTool.Cost(args.Skip(1).ToArray());
+            if (args.Length > 0 && args[0] == "--model-window") return PrcTool.Window(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--diag-memory") return Tools.DiagMemory(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--diag-leak2") return Tools.DiagLeak2(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--update-e2e") return Tools.UpdateEndToEnd(args.Skip(1).ToArray());
@@ -105,7 +107,7 @@ public static partial class Program
 
     private static IEnumerable<(string, Action)> AllChecks() =>
         EngineChecks.All().Concat(LinkChecks.All()).Concat(LayoutChecks.All()).Concat(ViewerChecks.All()).Concat(FeatureChecks.All())
-            .Concat(NavigationChecks.All()).Concat(UpdateChecks.All()).Concat(ProcessChecks.All());
+            .Concat(NavigationChecks.All()).Concat(ModelChecks.All()).Concat(UpdateChecks.All()).Concat(ProcessChecks.All());
 
     private static void Run(string name, Action test)
     {

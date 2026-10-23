@@ -57,6 +57,9 @@
         <!-- A pushpin, its point to the lower left. -->
         <PathGeometry x:Key="GeoPin" Figures="M14,3 L21,10 M15.5,4.5 L11,9 L7,9.5 L14.5,17 L15,13 L19.5,8.5 M10.5,13.5 L4,20" />
         <PathGeometry x:Key="GeoLink" Figures="M10,14 A4,4 0 0 0 15.66,14 L18.5,11.17 A4,4 0 0 0 12.83,5.5 L11.5,6.83 M14,10 A4,4 0 0 0 8.34,10 L5.5,12.83 A4,4 0 0 0 11.17,18.5 L12.5,17.17" />
+        <!-- A box seen from above a corner: a 3D model. And a house: the 3D view's start. -->
+        <PathGeometry x:Key="GeoCube" Figures="M12,3 L20,7.5 L20,16.5 L12,21 L4,16.5 L4,7.5 Z M4,7.5 L12,12 L20,7.5 M12,12 L12,21" />
+        <PathGeometry x:Key="GeoHome" Figures="M4,11 L12,4 L20,11 M6,9.5 L6,20 L18,20 L18,9.5" />
 
         <!-- Window buttons in the header, drawn like the Windows ones: 46 wide, full height, the
              system glyph font. Tag carries hover and pressed for the maximize button, whose mouse

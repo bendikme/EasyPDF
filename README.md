@@ -77,6 +77,17 @@ follows every kind of link a PDF can hold.
   trail already has is "here", with Back going on past it. A long trail folds into "..." menus.
   The bar dims after a few seconds so the drawing under
   it shows, brightens under the pointer, and can be hidden until the next jump.
+- **3D models.** A 3D annotation in PRC (EPLAN's cabinet layouts, for one) is a link: clicking
+  its picture on the page shows the model over the pages, to be turned (drag, about the point
+  under the pointer, the horizon kept level), moved (right-drag or Shift+drag) and zoomed toward
+  the pointer (the wheel, or a pinch), from any of the views stored with it - an EPLAN model has
+  one for every device - and back to the start (Home); Esc closes it. EasyPDF reads PRC itself,
+  including its compressed meshes, decoded exactly, and draws it on the processor, on every core,
+  as a CAD viewer does: lit faces, edge lines, see-through parts over the rest. While the model
+  moves it is drawn at the resolution that keeps up, and once it is still at the screen's with
+  smoothed edges. Nothing of it costs a document that is only read: a page's 3D annotations
+  are found while its links are read (a microsecond a page), and the model is not touched until
+  it is clicked. U3D models are not shown yet.
 - **Outline and pages.** The sidebar shows the document's outline, or thumbnails of its pages
   that follow the page being read; compact rows fit half as many again into it. The scroll bar
   has a lane of its own, so it never covers the selected row.
@@ -154,7 +165,10 @@ jumps, the mark on a link's destination (EPLAN's, on turned pages too), compact 
 recent files, a share that does not answer (played by a stand-in that stalls), named actions and
 buttons in plain, compressed and encrypted files, a form of 20,000 buttons, a document opened
 afresh to free PDFium's memory, the link policy, tiles that must join the whole-page
-render pixel for pixel at every rotation and zoom, search, selection, outline, passwords,
+render pixel for pixel at every rotation and zoom, search, selection, outline, passwords, 3D
+annotations (found among a page's links, their views read, models that cannot be shown saying
+so) and the 3D view's renderer and camera (lighting, edge lines, see-through parts without
+seams, what is behind the camera, turning, zooming, going between views),
 damaged and missing files, files past 2 GB and 4 GB, reload on change, memory staying within
 its budget, updating (against a stand-in for GitHub: a newer release downloaded, checked and installed on
 closing or by a restart that reopens the documents, a bad checksum or size refused, a portable
@@ -166,7 +180,10 @@ dialog and menu in both languages, and the real executable handing a second laun
 running one. The reader of the file's own objects is fed thousands of damaged files from memory that
 ends at an inaccessible page, so a single byte read too far would stop the run.
 `--diag-file <file.pdf>` and `--diag-memory <file.pdf> [--all]` time a document's opening,
-first tiles and links, and follow memory as its pages are read. Nothing reaches
+first tiles and links, and follow memory as its pages are read. `--prc <file.pdf> [page]
+[--png out.png] [--bench]` checks that every compressed mesh of a document's 3D models decodes
+exactly, draws the first from its first view and times frames of it; `--model-cost <file.pdf>`
+times what finding 3D annotations adds to reading each page's links. Nothing reaches
 the shell, the user's settings or a running EasyPDF - the last check makes sure of it.
 
 `tests\tools` turns the screenshot tool's output into PNGs (`--screenshot <folder> [large.pdf]`, then
@@ -193,6 +210,7 @@ settings and the log in another folder.
 | Page Up/Down, Space, Home, End, arrows | Move through the document; several pages at a time, each turns the whole sheet |
 | Ctrl+Up, Ctrl+Down | Several pages at a time: scroll within a sheet taller than the window |
 | Shift+Down, Shift+Up | Turn at once; held, faster and faster |
+| In a 3D model: arrows, +, -, Home, Esc | Turn, zoom in and out, the start view, back to the pages |
 
 ## How it is put together
 
@@ -200,7 +218,8 @@ settings and the log in another folder.
 | --- | --- |
 | `src\EasyPDF\Interop` | PDFium's C API, every signature blittable |
 | `src\EasyPDF\Pdf` | The engine thread every PDFium call runs on, the document (pages, links, text, outline, search, printing), the page canvas that makes tiles seamless, file access that never locks, and a reader of the file's own objects for what PDFium cannot tell (a form's size, what buttons and named actions do) |
-| `src\EasyPDF\Viewer` | The page view: layout in device pixels, tile planning and rendering, scrolling, zoom, links, selection, search |
+| `src\EasyPDF\Prc` | A reader of PRC, the 3D format of PDF 3D annotations: its bit stream, the product structure, styles, and the compressed meshes |
+| `src\EasyPDF\Viewer` | The page view: layout in device pixels, tile planning and rendering, scrolling, zoom, links, selection, search; and the 3D view: the model placed, its camera, and the renderer |
 | `src\EasyPDF\Views` | The window and dialogs; `Themes` holds the shared light/dark design system |
 | `src\EasyPDF\Services` | Settings, link policy, printing, single instance, theme, language, log |
 | `src\EasyPDF\Resources` | Every piece of UI text: `Strings.resx` (English) and `Strings.nb.resx` (Norwegian). A new string goes into both |

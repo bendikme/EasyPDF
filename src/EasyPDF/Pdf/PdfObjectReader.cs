@@ -98,7 +98,19 @@ internal sealed record PdfStream(Dictionary<string, object?> Dict, long DataOffs
 /// The model of a 3D annotation: its 3D stream's kind (PRC or U3D) and data, decoded, and the
 /// camera-to-world matrix of the view it opens at (12 numbers, PDF 32000 13.6.4), if it names one.
 /// </summary>
-internal sealed record Pdf3DModel(string Kind, byte[] Data, double[]? CameraToWorld);
+/// <summary>
+/// A 3D annotation's model (PDF 32000 13.6): its decoded stream - PRC or U3D - its views, the
+/// first shown at the start, and the shape of the annotation, its height over its width: a view's
+/// field of view spans its width.
+/// </summary>
+internal sealed record Pdf3DModel(string Kind, byte[] Data, IReadOnlyList<Pdf3DView> Views, double Aspect = 1);
+
+/// <summary>
+/// A view of a 3D model: its name and where its camera is - twelve numbers, the camera's axes X
+/// (right), Y (up) and Z (the way it looks) in world coordinates and then its position - and the
+/// camera's field of view in degrees.
+/// </summary>
+internal sealed record Pdf3DView(string Name, double[] CameraToWorld, double FieldOfView);
 
 /// <summary>
 /// Reads a PDF's objects without PDFium, for what PDFium's API will not tell: how big a form is
@@ -876,40 +888,100 @@ internal sealed class PdfObjectReader
 
     // ===================================================================== 3D annotations
 
-    /// <summary>
-    /// The models of a page's 3D annotations (PDF 32000 13.6): each one's 3D stream, given directly
-    /// or through a 3D reference, decoded, with the camera of its initial view - the annotation's
-    /// /3DV, else the stream's default /DV, else its first view. A stream over <paramref name="cap"/>
-    /// bytes decoded, or in a form this does not read, is left out.
-    /// </summary>
-    public List<Pdf3DModel> ThreeDModels(int pageIndex, int cap)
+    /// <summary>Where a page's 3D annotations are in its /Annots.</summary>
+    public List<int> ThreeDAnnotations(int pageIndex)
     {
         Begin();
-        var models = new List<Pdf3DModel>();
-        if (Page(pageIndex) is not { } page || Array(page.GetValueOrDefault("Annots")) is not { } annots) return models;
-        foreach (var a in annots)
-        {
-            if (Dict(a) is not { } annot || Name(annot.GetValueOrDefault("Subtype")) != "3D") continue;
-            var data = Resolve(annot.GetValueOrDefault("3DD"));
-            if (data is Dictionary<string, object?> reference) data = Resolve(reference.GetValueOrDefault("3DD"));
-            if (data is not PdfStream stream) continue;
-            var kind = Name(stream.Dict.GetValueOrDefault("Subtype"));
-            if (kind is not ("PRC" or "U3D") || Decode(stream, cap, out _) is not { } bytes) continue;
+        var found = new List<int>();
+        if (Page(pageIndex) is not { } page || Array(page.GetValueOrDefault("Annots")) is not { } annots) return found;
+        for (var i = 0; i < annots.Count; i++)
+            if (Dict(annots[i]) is { } annot && Name(annot.GetValueOrDefault("Subtype")) == "3D") found.Add(i);
+        return found;
+    }
 
-            var views = Array(stream.Dict.GetValueOrDefault("VA"));
-            object? View(object? choice) => Resolve(choice) switch
-            {
-                Dictionary<string, object?> view => view,
-                double i when views is not null && i >= 0 && i < views.Count => Dict(views[(int)i]),
-                _ => null,
-            };
-            var view = View(annot.GetValueOrDefault("3DV")) ?? View(stream.Dict.GetValueOrDefault("DV")) ?? (views is { Count: > 0 } ? Dict(views[0]) : null);
-            double[]? camera = null;
-            if (Dict(view) is { } v && Array(v.GetValueOrDefault("C2W")) is { Count: 12 } c2w && c2w.All(n => Number(n) is not null))
-                camera = c2w.Select(n => Number(n)!.Value).ToArray();
-            models.Add(new Pdf3DModel(kind, bytes, camera));
+    /// <summary>
+    /// The model of the 3D annotation at <paramref name="annotation"/> in a page's /Annots (PDF 32000
+    /// 13.6): its 3D stream, given directly or through a 3D reference, decoded, and those of its
+    /// views that place the camera - the one to start with first: the annotation's /3DV, else the
+    /// stream's /DV, else its first. Null when that is no 3D annotation, or its stream is over
+    /// <paramref name="cap"/> bytes decoded or in a form this does not read.
+    /// </summary>
+    public Pdf3DModel? ThreeDModel(int pageIndex, int annotation, int cap)
+    {
+        Begin();
+        if (Page(pageIndex) is not { } page || Array(page.GetValueOrDefault("Annots")) is not { } annots || (uint)annotation >= (uint)annots.Count) return null;
+        if (Dict(annots[annotation]) is not { } annot || Name(annot.GetValueOrDefault("Subtype")) != "3D") return null;
+        var data = Resolve(annot.GetValueOrDefault("3DD"));
+        if (data is Dictionary<string, object?> reference) data = Resolve(reference.GetValueOrDefault("3DD"));
+        if (data is not PdfStream stream) return null;
+        var kind = Name(stream.Dict.GetValueOrDefault("Subtype"));
+        if (kind is not ("PRC" or "U3D") || Decode(stream, cap, out _) is not { } bytes) return null;
+
+        var listed = Array(stream.Dict.GetValueOrDefault("VA")) ?? [];
+        var views = new List<Pdf3DView>();
+        var start = -1;
+        for (var i = 0; i < listed.Count && views.Count < 10_000; i++)
+        {
+            if (View(listed[i], views.Count + 1) is not { } view) continue;
+            if (start < 0 && IsStart(listed[i], i)) start = views.Count;
+            views.Add(view);
         }
-        return models;
+        if (start < 0 && (View(annot.GetValueOrDefault("3DV"), 0) ?? View(stream.Dict.GetValueOrDefault("DV"), 0)) is { } own)
+        {
+            // A view of the annotation's own, not one of those listed.
+            views.Insert(0, own);
+            start = 0;
+        }
+        if (start > 0)
+        {
+            var first = views[start];
+            views.RemoveAt(start);
+            views.Insert(0, first);
+        }
+        var aspect = 1.0;
+        if (Array(annot.GetValueOrDefault("Rect")) is { Count: 4 } rect && rect.All(n => Number(n) is not null))
+        {
+            var width = Math.Abs(Number(rect[2])!.Value - Number(rect[0])!.Value);
+            var height = Math.Abs(Number(rect[3])!.Value - Number(rect[1])!.Value);
+            if (width > 0 && height > 0) aspect = Math.Clamp(height / width, 0.05, 20);
+        }
+        return new Pdf3DModel(kind, bytes, views, aspect);
+
+        // Whether the annotation, or else the stream, starts with this listed view: naming it as a
+        // view, by its index or its name, or by F, L or D (first, last, the stream's default).
+        bool IsStart(object? entry, int index)
+        {
+            foreach (var choice in (ReadOnlySpan<object?>)[annot.GetValueOrDefault("3DV"), stream.Dict.GetValueOrDefault("DV")])
+            {
+                if (choice is null || (choice is PdfName { Value: "D" })) continue;
+                if (choice is PdfRef r) return entry is PdfRef e && e.Number == r.Number;
+                return Resolve(choice) switch
+                {
+                    double d => (int)d == index,
+                    PdfName { Value: "F" } => index == 0,
+                    PdfName { Value: "L" } => index == listed.Count - 1,
+                    PdfString => Dict(entry) is { } v && Text(v.GetValueOrDefault("IN"), 256) == Text(choice, 256),
+                    _ => false,
+                };
+            }
+            return index == 0;
+        }
+
+        // A view that places the camera by a matrix (a U3D view can name a node of its model instead).
+        Pdf3DView? View(object? value, int number)
+        {
+            if (Dict(value) is not { } v || Array(v.GetValueOrDefault("C2W")) is not { Count: 12 } c2w) return null;
+            var matrix = new double[12];
+            for (var k = 0; k < 12; k++)
+            {
+                if (Number(c2w[k]) is not { } n) return null;
+                matrix[k] = n;
+            }
+            var name = Text(v.GetValueOrDefault("XN"), 256) ?? Text(v.GetValueOrDefault("IN"), 256) ?? number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var projection = Dict(v.GetValueOrDefault("P"));
+            var fov = Name(projection?.GetValueOrDefault("Subtype")) == "P" && Number(projection!.GetValueOrDefault("FOV")) is { } f && f is > 0 and < 180 ? f : 30;
+            return new Pdf3DView(name.Trim(), matrix, fov);
+        }
     }
 
     // ===================================================================== reading bytes in order

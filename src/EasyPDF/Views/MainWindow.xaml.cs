@@ -241,6 +241,8 @@ public partial class MainWindow : Window
         if (previous is not null && !reload) RememberDocument();
 
         EndSearch(clearText: !reload);
+        CloseModel();
+        _lastModel = null;
         _document = document;
         if (!reload)
         {
@@ -276,6 +278,8 @@ public partial class MainWindow : Window
         if (_document is not { } document) return;
         RememberDocument();
         EndSearch(clearText: true);
+        CloseModel();
+        _lastModel = null;
         _document = null;
         _password = null;
         StopPageIndicator();
@@ -468,6 +472,7 @@ public partial class MainWindow : Window
         SidebarSummary.Text = UiLanguage.Format(Strings.Main_Sidebar_Summary, page + 1, document.PageCount, FormatSize(document.FileLength));
         SyncSidebarPage(page);
         UpdateTrailHere(page);
+        CloseModelIfPageChanged();
         UpdatePagesButton();
         TrackPageForIndicator(document.PageCount);
     }
@@ -572,6 +577,7 @@ public partial class MainWindow : Window
             return;
         }
         StatusText.Text = PdfView.LinkText(e.Target);
+        StatusIcon.Data = (System.Windows.Media.Geometry)FindResource(e.Target is ModelTarget ? "GeoCube" : "GeoLink");
         StatusIcon.Visibility = Visibility.Visible;
         StatusPill.Visibility = StatusText.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -669,6 +675,7 @@ public partial class MainWindow : Window
             (Key.F4, false, false, false) when HasDocument => Do(() => SetSidebar(!IsSidebarOpen, remember: true)),
             (Key.F5, false, false, false) when HasDocument => Do(() => _ = Reload()),
             (Key.F11, false, false, false) when HasDocument => Do(ToggleFullScreen),
+            (Key.Escape, false, false, false) when IsModelShown && !inText => Do(CloseModel),
             (Key.Escape, false, false, false) when _fullScreen => Do(ExitFullScreen),
             (Key.Left, false, false, true) when HasDocument => Do(View.GoBack),
             (Key.Right, false, false, true) when HasDocument => Do(View.GoForward),
@@ -690,7 +697,8 @@ public partial class MainWindow : Window
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
-        if (e.Handled || _document is null || Keyboard.FocusedElement is TextBox) return;
+        // In the 3D view the keys are the model's, not the pages' under it.
+        if (e.Handled || _document is null || Keyboard.FocusedElement is TextBox || IsModelShown) return;
 
         // Reading keys reach the pages wherever focus is (a toolbar button just clicked, say).
         if (e.Key is Key.Up or Key.Down or Key.Left or Key.Right or Key.PageUp or Key.PageDown or Key.Home or Key.End or Key.Space)
@@ -805,6 +813,8 @@ public partial class MainWindow : Window
         StopPageIndicator();
         EndSearch(clearText: false);
         StopWatching();
+        CloseModel();
+        _lastModel = null;
         var document = _document;
         _document = null;
         View.SetDocument(null);

@@ -409,6 +409,39 @@ Detaljene står i {1}.</value>
   <data name="View_LinkPage" xml:space="preserve">
     <value>Side {0}</value>
   </data>
+  <data name="View_LinkModel" xml:space="preserve">
+    <value>3D-modell - klikk for å se den i 3D</value>
+  </data>
+  <data name="View_ShowModel" xml:space="preserve">
+    <value>Vis 3D-modellen</value>
+  </data>
+  <data name="Model_Views" xml:space="preserve">
+    <value>Visninger som er lagret med modellen</value>
+  </data>
+  <data name="Model_Home" xml:space="preserve">
+    <value>Startvisning (Home)</value>
+  </data>
+  <data name="Model_Close" xml:space="preserve">
+    <value>Lukk 3D-visningen (Esc)</value>
+  </data>
+  <data name="Model_Reading" xml:space="preserve">
+    <value>Leser 3D-modellen …</value>
+  </data>
+  <data name="Model_Failed" xml:space="preserve">
+    <value>3D-modellen kunne ikke leses.</value>
+  </data>
+  <data name="Model_U3D" xml:space="preserve">
+    <value>Denne 3D-modellen er i U3D-format, som EasyPDF ikke kan vise ennå.</value>
+  </data>
+  <data name="Model_Empty" xml:space="preserve">
+    <value>3D-modellen har ikke noe EasyPDF kan tegne.</value>
+  </data>
+  <data name="Model_LeftOut" xml:space="preserve">
+    <value>Deler som ikke kunne leses, er utelatt ({0}).</value>
+  </data>
+  <data name="Model_Hint" xml:space="preserve">
+    <value>Dra for å snu, dra med høyre knapp for å flytte, rull for å zoome</value>
+  </data>
   <data name="View_Action_NextPage" xml:space="preserve">
     <value>Neste side</value>
   </data>

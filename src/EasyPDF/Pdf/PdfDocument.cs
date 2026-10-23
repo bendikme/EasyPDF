@@ -858,16 +858,20 @@ public sealed unsafe class PdfDocument
         if (entry is null) return _closed ? null : new PageInfo(pageIndex, Array.Empty<PdfLink>(), PageText.Empty);
 
         EnsureMatrix(entry);
-        var links = ReadLinks(entry, out var unsupportedSeen);
-        AddActionLinks(entry, links, unsupportedSeen, out var morePending);
+        var links = ReadLinks(entry, out var unsupportedSeen, out var linkAnnotations);
+        AddActionLinks(entry, links, unsupportedSeen, out var morePending, out var models);
         var text = TextOf(entry);
         var pageText = text != 0 ? ReadText(entry, text) : PageText.Empty;
         if (text != 0) ReadWebLinks(entry, text, links);
+        AddModelLinks(entry, links, linkAnnotations, models);
         return new PageInfo(pageIndex, links, pageText, morePending);
     }
 
-    /// <summary>The page's link annotations, as PDFium reads them; <paramref name="unsupportedSeen"/> when one has an action it cannot read.</summary>
-    private List<PdfLink> ReadLinks(PageEntry entry, out bool unsupportedSeen)
+    /// <summary>
+    /// The page's link annotations, as PDFium reads them; <paramref name="unsupportedSeen"/> when one
+    /// has an action it cannot read, and <paramref name="enumerated"/> how many link annotations there were.
+    /// </summary>
+    private List<PdfLink> ReadLinks(PageEntry entry, out bool unsupportedSeen, out int enumerated)
     {
         unsupportedSeen = false;
         var links = new List<PdfLink>();
@@ -928,7 +932,66 @@ public sealed unsafe class PdfDocument
             if (areas.Count > 0) links.Add(new PdfLink(areas, target, fromText: false));
         }
 
+        enumerated = ordinal + 1;
         return links;
+    }
+
+    // ===================================================================== 3D models
+
+    /// <summary>The most annotations of one page looked through for 3D models.</summary>
+    private const int MaxAnnotationsSearched = 10_000;
+
+    /// <summary>The largest 3D stream read, decoded.</summary>
+    private const int MaxModelBytes = 256 << 20;
+
+    /// <summary>
+    /// The page's 3D annotations, as links that show their model - after every other link, as one
+    /// often covers the whole page. Where they are is <paramref name="known"/> when the page's
+    /// annotations were read for its buttons already; else only a page with annotations besides
+    /// its links is looked through - a page of links and text costs one count. Engine thread.
+    /// </summary>
+    private static void AddModelLinks(PageEntry entry, List<PdfLink> links, int linkAnnotations, List<int>? known)
+    {
+        var count = Math.Min(Pdfium.FPDFPage_GetAnnotCount(entry.Page), MaxAnnotationsSearched);
+        if (known is null && count <= linkAnnotations) return;
+        foreach (var i in known ?? Enumerable.Range(0, count))
+        {
+            if (i >= count || links.Count >= MaxLinksPerPage) break;
+            var annot = Pdfium.FPDFPage_GetAnnot(entry.Page, i);
+            if (annot == 0) continue;
+            try
+            {
+                Pdfium.RectF rect;
+                if (Pdfium.FPDFAnnot_GetSubtype(annot) != Pdfium.AnnotThreeD || Pdfium.FPDFAnnot_GetRect(annot, &rect) == 0) continue;
+                var area = ToFractionRect(entry, rect.Left, rect.Top, rect.Right, rect.Bottom);
+                if (!area.IsEmpty) links.Add(new PdfLink([area], new ModelTarget(entry.Index, i), fromText: false));
+            }
+            finally
+            {
+                Pdfium.FPDFPage_CloseAnnot(annot);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The model of a 3D annotation, with its views, read from the file itself - PDFium reads no 3D
+    /// streams. Null when the file cannot be read that way (encrypted, or damaged so that its pages
+    /// read differently) or the annotation holds no model this reads.
+    /// </summary>
+    internal Task<Pdf3DModel?> LoadModelAsync(ModelTarget target) => _engine.Run(JobPriority.Interactive, () => LoadModel(target));
+
+    private Pdf3DModel? LoadModel(ModelTarget target)
+    {
+        if (_closed || ObjectsWithPages is not { } objects) return null;
+        try
+        {
+            return objects.ThreeDModel(target.PageIndex, target.Annotation, MaxModelBytes);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn($"The 3D model on page {target.PageIndex + 1} of {FileName} could not be read.", ex);
+            return null;
+        }
     }
 
     // ===================================================================== links PDFium leaves out
@@ -983,11 +1046,13 @@ public sealed unsafe class PdfDocument
     /// a form has them) and named actions (only where PDFium met an action it could not read).
     /// They are read from the file itself; a file that cannot be read that way has them read from
     /// a copy PDFium writes, by a job of its own after what is on screen - <paramref name="pending"/>
-    /// is that job, and the page is read again when it is done. Engine thread.
+    /// is that job, and the page is read again when it is done. Read from the file itself, every
+    /// annotation's kind is known: <paramref name="models"/> is then where the 3D ones are. Engine thread.
     /// </summary>
-    private void AddActionLinks(PageEntry entry, List<PdfLink> links, bool unsupportedSeen, out Task? pending)
+    private void AddActionLinks(PageEntry entry, List<PdfLink> links, bool unsupportedSeen, out Task? pending, out List<int>? models)
     {
         pending = null;
+        models = null;
         if (_formType == 0 && !unsupportedSeen && !_hasScripts) return;
 
         List<RawLink>? found;
@@ -995,7 +1060,8 @@ public sealed unsafe class PdfDocument
         {
             try
             {
-                found = ActionLinks.ForPage(objects, entry.Index, out var annotations);
+                var threeD = new List<int>();
+                found = ActionLinks.ForPage(objects, entry.Index, out var annotations, threeD);
 
                 // The same page to both, or its links are not trusted: PDFium and the reader can
                 // disagree about a page tree that is damaged in ways both get past.
@@ -1005,6 +1071,7 @@ public sealed unsafe class PdfDocument
                     _pageMismatchLogged = true;
                     return;
                 }
+                models = threeD;
             }
             catch (Exception ex)
             {

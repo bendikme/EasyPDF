@@ -27,6 +27,11 @@ def add_link(doc, page, rect, body):
     pdf_rect = f"[{x0} {h - y1} {x1} {h - y0}]"
     xref = doc.get_new_xref()
     doc.update_object(xref, f"<< /Type /Annot /Subtype /Link /Rect {pdf_rect} /Border [0 0 0] {body} >>")
+    return append_annot(doc, page, xref)
+
+
+def append_annot(doc, page, xref):
+    """Adds the annotation object xref to the end of the page's /Annots."""
     kind, value = doc.xref_get_key(page.xref, "Annots")
     if kind == "array":
         annots = value[1:-1].strip()
@@ -338,6 +343,50 @@ def cyclic_outline_pdf():
     doc.save(out("cyclic-outline.pdf"))
 
 
+def model_pdf():
+    """
+    3D annotations: on page 1 a PRC one - its stream is not a real model - with two views, the
+    second named as the one to start with, under a web link; on page 2 a U3D one; page 3 has none.
+    """
+    doc = pymupdf.open()
+    for _ in range(3):
+        doc.new_page(width=612, height=792)
+    p1, p2, p3 = doc[0], doc[1], doc[2]
+    text(p1, 72, 72, "A 3D model", 20)
+    text(p2, 72, 72, "A U3D model", 20)
+    text(p3, 72, 72, "No model here", 20)
+
+    def model(page, kind, data, rect, views, start):
+        x0, y0, x1, y1 = rect
+        h = page.rect.height
+        refs = []
+        for name, c2w, fov in views:
+            v = doc.get_new_xref()
+            projection = f"/P << /Subtype /P /FOV {fov} >>" if fov else ""
+            doc.update_object(v, f"<< /Type /3DView /XN ({name}) /MS /M /C2W [{' '.join(str(n) for n in c2w)}] {projection} >>")
+            refs.append(v)
+        stream = doc.get_new_xref()
+        doc.update_object(stream, f"<< /Type /3D /Subtype /{kind} /VA [{' '.join(f'{v} 0 R' for v in refs)}] >>")
+        doc.update_stream(stream, data)
+        # What the page shows of it before it is turned on: a grey panel.
+        w, ht = x1 - x0, y1 - y0
+        poster = doc.get_new_xref()
+        doc.update_object(poster, f"<< /Type /XObject /Subtype /Form /BBox [0 0 {w} {ht}] >>")
+        doc.update_stream(poster, f"0.85 0.87 0.9 rg 0 0 {w} {ht} re f 0.3 0.3 0.3 RG 2 w 20 20 {w - 40} {ht - 40} re S".encode())
+        annot = doc.get_new_xref()
+        first = f"/3DV {refs[start]} 0 R" if start is not None else ""
+        doc.update_object(annot, f"<< /Type /Annot /Subtype /3D /Rect [{x0} {h - y1} {x1} {h - y0}] /F 4 "
+                                 f"/3DD {stream} 0 R {first} /AP << /N {poster} 0 R >> >>")
+        append_annot(doc, page, annot)
+
+    front = [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -500, 0]
+    side = [0, 1, 0, 0, 0, 1, 1, 0, 0, -400, 0, 0]
+    model(p1, "PRC", b"not a PRC model", (72, 120, 540, 600), [("Front", front, None), ("=A1+B2-K1", side, 45)], start=1)
+    add_link(doc, p1, (100, 150, 250, 170), "/A << /S /URI /URI (https://example.com/over-the-model) >>")
+    model(p2, "U3D", b"U3D\0not a model either", (72, 120, 540, 600), [("Default", front, None)], start=None)
+    doc.save(out("model.pdf"), garbage=3, deflate=True)
+
+
 def broken_files():
     with open(out("links.pdf"), "rb") as f:
         data = f.read()
@@ -361,6 +410,7 @@ if __name__ == "__main__":
     form_pdf()
     search_pdf()
     cyclic_outline_pdf()
+    model_pdf()
     broken_files()
     for name in sorted(os.listdir(HERE)):
         if name.endswith(".pdf"):

@@ -409,6 +409,39 @@ The details are in {1}.</value>
   <data name="View_LinkPage" xml:space="preserve">
     <value>Page {0}</value>
   </data>
+  <data name="View_LinkModel" xml:space="preserve">
+    <value>3D model - click to view it in 3D</value>
+  </data>
+  <data name="View_ShowModel" xml:space="preserve">
+    <value>Show the 3D model</value>
+  </data>
+  <data name="Model_Views" xml:space="preserve">
+    <value>Views stored with the model</value>
+  </data>
+  <data name="Model_Home" xml:space="preserve">
+    <value>Start view (Home)</value>
+  </data>
+  <data name="Model_Close" xml:space="preserve">
+    <value>Close the 3D view (Esc)</value>
+  </data>
+  <data name="Model_Reading" xml:space="preserve">
+    <value>Reading the 3D model…</value>
+  </data>
+  <data name="Model_Failed" xml:space="preserve">
+    <value>The 3D model could not be read.</value>
+  </data>
+  <data name="Model_U3D" xml:space="preserve">
+    <value>This 3D model is in the U3D format, which EasyPDF cannot show yet.</value>
+  </data>
+  <data name="Model_Empty" xml:space="preserve">
+    <value>The 3D model holds nothing EasyPDF can draw.</value>
+  </data>
+  <data name="Model_LeftOut" xml:space="preserve">
+    <value>Parts that could not be read are left out ({0}).</value>
+  </data>
+  <data name="Model_Hint" xml:space="preserve">
+    <value>Drag to turn, right-drag to move, wheel to zoom</value>
+  </data>
   <data name="View_Action_NextPage" xml:space="preserve">
     <value>Next page</value>
   </data>

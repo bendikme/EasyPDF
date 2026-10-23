@@ -86,6 +86,9 @@ public sealed record LaunchTarget(string Path) : LinkTarget;
 public sealed record RemoteGoToTarget(string Path, int PageIndex, int LinkOrdinal, int OutlineIndex = -1,
     PdfDestination? Destination = null, string? DestinationName = null) : LinkTarget;
 
+/// <summary>Shows the 3D model of a 3D annotation: the one at <paramref name="Annotation"/> in the page's /Annots.</summary>
+public sealed record ModelTarget(int PageIndex, int Annotation) : LinkTarget;
+
 /// <summary>The viewer commands a document can name in a link (/S /Named).</summary>
 public enum NamedAction
 {

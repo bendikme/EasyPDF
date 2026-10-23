@@ -27,9 +27,11 @@ internal static class ActionLinks
 
     /// <summary>
     /// The page's links PDFium leaves out, and how many entries its /Annots has - for the caller
-    /// to check against PDFium's own count that both read the same page.
+    /// to check against PDFium's own count that both read the same page. Where its 3D
+    /// annotations are in /Annots is added to <paramref name="models"/>, as every annotation's
+    /// kind is read anyway.
     /// </summary>
-    public static List<RawLink> ForPage(PdfObjectReader pdf, int pageIndex, out int annotationCount)
+    public static List<RawLink> ForPage(PdfObjectReader pdf, int pageIndex, out int annotationCount, List<int>? models = null)
     {
         pdf.Begin();
         annotationCount = 0;
@@ -37,10 +39,11 @@ internal static class ActionLinks
         if (pdf.Page(pageIndex) is not { } page || pdf.Array(page.GetValueOrDefault("Annots")) is not { } annotations) return links;
         annotationCount = annotations.Count;
 
-        foreach (var item in annotations.Take(MaxAnnotations))
+        for (var index = 0; index < annotations.Count && index < MaxAnnotations; index++)
         {
-            if (pdf.Dict(item) is not { } annotation) continue;
+            if (pdf.Dict(annotations[index]) is not { } annotation) continue;
             var subtype = pdf.Name(annotation.GetValueOrDefault("Subtype"));
+            if (subtype == "3D") models?.Add(index);
             if (subtype is not ("Link" or "Widget")) continue;
             if (pdf.Number(annotation.GetValueOrDefault("F")) is { } flags && ((int)flags & (FlagHidden | FlagNoView)) != 0) continue;
 

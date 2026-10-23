@@ -288,6 +288,7 @@ internal static unsafe partial class Pdfium
     // ---------------------------------------------------------------- annotations
 
     public const int AnnotWidget = 20;
+    public const int AnnotThreeD = 25;
 
     /// <summary>How many entries the page's /Annots has.</summary>
     [LibraryImport(Lib)]
@@ -301,6 +302,9 @@ internal static unsafe partial class Pdfium
 
     [LibraryImport(Lib)]
     public static partial void FPDFPage_CloseAnnot(nint annot);
+
+    [LibraryImport(Lib)]
+    public static partial int FPDFAnnot_GetRect(nint annot, RectF* rect);
 
     /// <summary>The page's /Rotate in quarter turns, 0-3.</summary>
     [LibraryImport(Lib)]

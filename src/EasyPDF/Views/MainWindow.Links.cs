@@ -75,6 +75,14 @@ public partial class MainWindow
                 Act(LinkPolicy.ForFile(remote.Path, documentPath), remote);
                 return;
 
+            case ModelTarget model:
+                // Once the click is over, so the 3D view takes the pointer from a finished gesture.
+                Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+                {
+                    if (!_closed && HasDocument) ShowModel(model);
+                });
+                return;
+
             case NamedActionTarget named:
                 // The view runs those that move through the document; these are the window's. They
                 // run once the click is over, so no dialog opens under a captured mouse.
