@@ -20,24 +20,27 @@ internal sealed class PrcScene
     public List<PrcMeshInstance> Meshes { get; } = [];
     public List<PrcWireInstance> Wires { get; } = [];
 
-    /// <summary>The decode of each compressed tessellation, shared by every occurrence of it.</summary>
+    /// <summary>The decode of each compressed tessellation, shared by every occurrence of it; null when it was not exact.</summary>
     private readonly Dictionary<PrcCompressedTessellation, PrcMesh?> _decoded = new(ReferenceEqualityComparer.Instance);
-    private Func<PrcDecodeReport, bool>? _accept;
 
     public static readonly PrcRgba DefaultColor = new(0.75, 0.75, 0.75, 1);
 
-    public static PrcScene Build(PrcFile file, PrcDecodeOptions options, Action<PrcCompressedTessellation, PrcDecodeReport>? report = null, Func<PrcDecodeReport, bool>? accept = null)
+    /// <summary>
+    /// The scene of <paramref name="file"/>. A compressed mesh is drawn only when its decode is
+    /// exact; <paramref name="report"/> hears how each decode went.
+    /// </summary>
+    public static PrcScene Build(PrcFile file, Action<PrcCompressedTessellation, PrcDecodeReport>? report = null)
     {
-        var scene = new PrcScene { _accept = accept };
+        var scene = new PrcScene();
         foreach (var (id, index, active) in file.Roots)
         {
             if (!active || file.Find(id) is not { } fs || index == 0 || index > fs.Occurrences.Count) continue;
-            scene.Occurrence(file, fs, (int)index - 1, PrcMatrix.Identity, null, 0, options, report);
+            scene.Occurrence(file, fs, (int)index - 1, PrcMatrix.Identity, null, 0, report);
         }
         return scene;
     }
 
-    private void Occurrence(PrcFile file, PrcFileStructure fs, int index, PrcMatrix parent, PrcStyleRef? inherited, int depth, PrcDecodeOptions options, Action<PrcCompressedTessellation, PrcDecodeReport>? report)
+    private void Occurrence(PrcFile file, PrcFileStructure fs, int index, PrcMatrix parent, PrcStyleRef? inherited, int depth, Action<PrcCompressedTessellation, PrcDecodeReport>? report)
     {
         if (depth > 64 || index < 0 || index >= fs.Occurrences.Count) return;
         var po = fs.Occurrences[index];
@@ -49,26 +52,26 @@ internal sealed class PrcScene
         {
             var part = fs.Parts[(int)po.Part - 1];
             var partStyle = Inherit(style, fs, part.Graphics);
-            foreach (var item in part.Items) Item(fs, item, m, partStyle, po.Name, options, report);
+            foreach (var item in part.Items) Item(fs, item, m, partStyle, po.Name, report);
         }
         if (po.Prototype != 0 && Target(file, fs, po.PrototypeFile) is { } prototype)
-            Occurrence(file, prototype, (int)po.Prototype - 1, m, style, depth + 1, options, report);
+            Occurrence(file, prototype, (int)po.Prototype - 1, m, style, depth + 1, report);
         if (po.External != 0 && Target(file, fs, po.ExternalFile) is { } external)
-            Occurrence(file, external, (int)po.External - 1, m, style, depth + 1, options, report);
+            Occurrence(file, external, (int)po.External - 1, m, style, depth + 1, report);
         foreach (var child in po.Children)
-            Occurrence(file, fs, (int)child, m, style, depth + 1, options, report);
+            Occurrence(file, fs, (int)child, m, style, depth + 1, report);
     }
 
     private static PrcFileStructure? Target(PrcFile file, PrcFileStructure fs, PrcFileRef reference) => reference.Id is { } id ? file.Find(id) : fs;
 
-    private void Item(PrcFileStructure fs, PrcItem item, PrcMatrix parent, PrcStyleRef? inherited, string name, PrcDecodeOptions options, Action<PrcCompressedTessellation, PrcDecodeReport>? report)
+    private void Item(PrcFileStructure fs, PrcItem item, PrcMatrix parent, PrcStyleRef? inherited, string name, Action<PrcCompressedTessellation, PrcDecodeReport>? report)
     {
         if (item.Graphics.Removed) return;
         var m = item.LocalCoordinateSystem != 0 && item.LocalCoordinateSystem <= fs.CoordinateSystems.Count
             ? parent * fs.CoordinateSystems[(int)item.LocalCoordinateSystem - 1]
             : parent;
         var style = Inherit(inherited, fs, item.Graphics);
-        foreach (var child in item.Children) Item(fs, child, m, style, name, options, report);
+        foreach (var child in item.Children) Item(fs, child, m, style, name, report);
         if (item.Tessellation == 0 || item.Tessellation > fs.Tessellations.Count) return;
 
         switch (fs.Tessellations[(int)item.Tessellation - 1])
@@ -76,9 +79,9 @@ internal sealed class PrcScene
             case PrcCompressedTessellation compressed:
                 if (!_decoded.TryGetValue(compressed, out var mesh))
                 {
-                    mesh = compressed.Decode(options, out var r);
+                    mesh = compressed.Decode(out var r);
                     report?.Invoke(compressed, r);
-                    if (_accept?.Invoke(r) == false) mesh = null;
+                    if (!r.Exact) mesh = null;
                     _decoded[compressed] = mesh;
                 }
                 if (mesh is { Triangles.Length: > 0 }) Meshes.Add(new PrcMeshInstance(mesh, m, Colors(fs, mesh, style), name));

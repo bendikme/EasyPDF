@@ -59,6 +59,7 @@ public static partial class Program
             if (args.Length > 0 && args[0] == "--screenshot") return Tools.Screenshots(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--bench") return Tools.Bench(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--diag-file") return Tools.DiagFile(args.Skip(1).ToArray());
+            if (args.Length > 0 && args[0] == "--prc") return PrcTool.Run(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--diag-memory") return Tools.DiagMemory(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--diag-leak2") return Tools.DiagLeak2(args.Skip(1).ToArray());
             if (args.Length > 0 && args[0] == "--update-e2e") return Tools.UpdateEndToEnd(args.Skip(1).ToArray());

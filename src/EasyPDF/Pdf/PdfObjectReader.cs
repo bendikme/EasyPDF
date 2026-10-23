@@ -95,6 +95,12 @@ internal sealed class PdfString(byte[] bytes)
 internal sealed record PdfStream(Dictionary<string, object?> Dict, long DataOffset);
 
 /// <summary>
+/// The model of a 3D annotation: its 3D stream's kind (PRC or U3D) and data, decoded, and the
+/// camera-to-world matrix of the view it opens at (12 numbers, PDF 32000 13.6.4), if it names one.
+/// </summary>
+internal sealed record Pdf3DModel(string Kind, byte[] Data, double[]? CameraToWorld);
+
+/// <summary>
 /// Reads a PDF's objects without PDFium, for what PDFium's API will not tell: how big a form is
 /// before its form module is let loose on it, and what the document's buttons and named actions
 /// do. It reads the file as PDFium does - cross-reference tables and streams, updates, hybrid
@@ -866,6 +872,44 @@ internal sealed class PdfObjectReader
             }
         }
         return count;
+    }
+
+    // ===================================================================== 3D annotations
+
+    /// <summary>
+    /// The models of a page's 3D annotations (PDF 32000 13.6): each one's 3D stream, given directly
+    /// or through a 3D reference, decoded, with the camera of its initial view - the annotation's
+    /// /3DV, else the stream's default /DV, else its first view. A stream over <paramref name="cap"/>
+    /// bytes decoded, or in a form this does not read, is left out.
+    /// </summary>
+    public List<Pdf3DModel> ThreeDModels(int pageIndex, int cap)
+    {
+        Begin();
+        var models = new List<Pdf3DModel>();
+        if (Page(pageIndex) is not { } page || Array(page.GetValueOrDefault("Annots")) is not { } annots) return models;
+        foreach (var a in annots)
+        {
+            if (Dict(a) is not { } annot || Name(annot.GetValueOrDefault("Subtype")) != "3D") continue;
+            var data = Resolve(annot.GetValueOrDefault("3DD"));
+            if (data is Dictionary<string, object?> reference) data = Resolve(reference.GetValueOrDefault("3DD"));
+            if (data is not PdfStream stream) continue;
+            var kind = Name(stream.Dict.GetValueOrDefault("Subtype"));
+            if (kind is not ("PRC" or "U3D") || Decode(stream, cap, out _) is not { } bytes) continue;
+
+            var views = Array(stream.Dict.GetValueOrDefault("VA"));
+            object? View(object? choice) => Resolve(choice) switch
+            {
+                Dictionary<string, object?> view => view,
+                double i when views is not null && i >= 0 && i < views.Count => Dict(views[(int)i]),
+                _ => null,
+            };
+            var view = View(annot.GetValueOrDefault("3DV")) ?? View(stream.Dict.GetValueOrDefault("DV")) ?? (views is { Count: > 0 } ? Dict(views[0]) : null);
+            double[]? camera = null;
+            if (Dict(view) is { } v && Array(v.GetValueOrDefault("C2W")) is { Count: 12 } c2w && c2w.All(n => Number(n) is not null))
+                camera = c2w.Select(n => Number(n)!.Value).ToArray();
+            models.Add(new Pdf3DModel(kind, bytes, camera));
+        }
+        return models;
     }
 
     // ===================================================================== reading bytes in order
