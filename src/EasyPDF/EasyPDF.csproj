@@ -53,7 +53,8 @@
     <Using Remove="System.Drawing" />
   </ItemGroup>
 
-  <!-- Licences travel with the binaries they cover: PDFium's (and its libraries') and Roboto's. -->
+  <!-- Licences travel with the binaries they cover: PDFium's (and its libraries'), Roboto's, and
+       prc-rs's for the PRC reading ported from it. -->
   <ItemGroup>
     <None Update="Assets\Fonts\OFL.txt">
       <Link>licenses\Roboto-OFL.txt</Link>
@@ -61,6 +62,10 @@
     </None>
     <None Include="ThirdParty\PDFium\*.*">
       <Link>licenses\PDFium\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ThirdParty\prc-rs\*.*">
+      <Link>licenses\prc-rs\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ThirdParty\README.md">
