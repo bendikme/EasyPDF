@@ -79,14 +79,18 @@
 
     <!-- Start menu entry. A per-user shortcut needs an HKCU key path, and the folder it lives in
          has to be removed explicitly on uninstall - unless another DYNATEC app still has its
-         shortcut there, in which case Windows Installer leaves the folder alone. -->
+         shortcut there, in which case Windows Installer leaves the folder alone.
+
+         No Icon attribute, on purpose: the shortcut then shows EasyPDF.exe's own icon. With one,
+         it points at the copy Windows Installer keeps in %APPDATA%\Microsoft\Installer\{ProductCode},
+         and when that copy goes missing the shortcut - and the taskbar pin copied from it - shows
+         a blank page. The exe is always where the shortcut points. -->
     <Component Id="StartMenuShortcut" Directory="AppProgramMenuFolder" Guid="AEF6F543-5654-4A51-A254-07EBD78A7AFE">
       <Shortcut Id="AppShortcut"
                 Name="EasyPDF"
                 Description="Fast PDF viewer"
                 Target="[INSTALLFOLDER]EasyPDF.exe"
-                WorkingDirectory="INSTALLFOLDER"
-                Icon="EasyPDF.ico" />
+                WorkingDirectory="INSTALLFOLDER" />
       <RemoveFolder Id="RemoveAppProgramMenuFolder" Directory="AppProgramMenuFolder" On="uninstall" />
       <RegistryValue Root="HKCU" Key="Software\DYNATEC\EasyPDF" Name="StartMenuShortcut"
                      Type="integer" Value="1" KeyPath="yes" />

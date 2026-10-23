@@ -88,6 +88,9 @@ public partial class App : Application
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () =>
             FileAvailability.Check(SettingsStore.Current.Settings.Recent.Select(r => r.Path).ToList()));
 
+        // A taskbar pin or Start menu shortcut whose icon file is gone gets the exe's icon back.
+        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => Task.Run(ShortcutIcons.Repair));
+
         // Updates are looked for once everything else is done (the first check is half a minute on).
         Updater.Current = new Updater(Dispatcher);
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => Updater.Current?.Start());
