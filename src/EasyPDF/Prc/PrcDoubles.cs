@@ -73,15 +73,6 @@ internal static class PrcDoubles
 
     private static long Key(int length, uint code) => (long)length << 32 | code;
 
-    /// <summary>Each code to the index of its frequent value, or to the one's complement of its exponent.</summary>
-    private static readonly Lazy<Dictionary<long, int>> Table = new(() =>
-    {
-        var table = new Dictionary<long, int>(FrequentCodes.Length + ExponentCodes.Length);
-        for (var i = 0; i < FrequentCodes.Length; i++) table.Add(Key((int)(FrequentCodes[i] >> 24), FrequentCodes[i] & 0xFFFFFF), i);
-        for (var e = 0; e < ExponentCodes.Length; e++) table.Add(Key((int)(ExponentCodes[e] >> 24), ExponentCodes[e] & 0xFFFFFF), ~e);
-        return table;
-    });
-
     /// <summary>The frequent values' codes: the code's length in the top byte, the code below it.</summary>
     private static readonly uint[] FrequentCodes =
     [
@@ -363,4 +354,13 @@ internal static class PrcDoubles
         0x163A95A7, 0x163A95A8, 0x163A95A9, 0x163A95AA, 0x163A95AB, 0x163A95AC, 0x163A95AD, 0x163A95AE,
         0x163A95AF, 0x163B8FE0, 0x163B8FE1, 0x163B8FE2, 0x163B8FE3, 0x15068E90, 0x15068E91, 0x15068E98,
     ];
+
+    /// <summary>Each code to the index of its frequent value, or to the one's complement of its exponent.</summary>
+    private static readonly Lazy<Dictionary<long, int>> Table = new(() =>
+    {
+        var table = new Dictionary<long, int>(FrequentCodes.Length + ExponentCodes.Length);
+        for (var i = 0; i < FrequentCodes.Length; i++) table.Add(Key((int)(FrequentCodes[i] >> 24), FrequentCodes[i] & 0xFFFFFF), i);
+        for (var e = 0; e < ExponentCodes.Length; e++) table.Add(Key((int)(ExponentCodes[e] >> 24), ExponentCodes[e] & 0xFFFFFF), ~e);
+        return table;
+    });
 }
