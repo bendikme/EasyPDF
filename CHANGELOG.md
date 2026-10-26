@@ -3,6 +3,16 @@
 What changed in each release of EasyPDF. The release workflow puts a version's section in the
 notes of its GitHub release, so every version tagged needs one here.
 
+## 1.1.2 - 2026-10-26
+
+- Starts in little more than half the time: on a warm machine the first page is on screen about
+  300 ms after the double-click, where 1.1.1 took about 480 ms. WPF's composition engine and
+  the one-off set-up of the controls, fonts and XAML loader are now done on threads of their
+  own while the app starts, instead of one after the other on the thread that builds the
+  window; the session is asked of the kernel instead of being read off a list of every
+  process; the updater is made once the window is up; and two parts of the runtime the app
+  never used (managed event tracing and the ICU globalization library) are no longer started.
+
 ## 1.1.1 - 2026-10-26
 
 - One page or a grid of pages at a time, each notch of the mouse wheel turns a page (or a

@@ -28,7 +28,12 @@ public static class Program
         var alone = args.Contains("--new-instance", StringComparer.OrdinalIgnoreCase);
 
         if (!alone && SingleInstance.TryForward(files, Environment.CurrentDirectory)) return 0;
+        StartupTrace.Mark("forward-checked");
 
+        // This launch runs on its own, so as early as that is known: WPF takes longer to get
+        // ready than the app does, and the first window waits for it. (Not before the hand-over
+        // check: a process that exits with WPF half started on another thread dies of it.)
+        StartupWarmup.Start();
         PdfEngine.Warm();
         // Read while WPF starts; the app waits for it only if it is not done by then.
         var settings = Task.Run(() => SettingsStore.Load());

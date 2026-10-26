@@ -67,6 +67,8 @@ public partial class App : Application
         };
 
         StartupTrace.Mark("startup");
+        // Once the first frame is on screen, the warm-up threads are done with.
+        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, StartupWarmup.Finish);
         SettingsStore settings;
         try
         {
@@ -91,9 +93,15 @@ public partial class App : Application
         // A taskbar pin or Start menu shortcut whose icon file is gone gets the exe's icon back.
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => Task.Run(ShortcutIcons.Repair));
 
-        // Updates are looked for once everything else is done (the first check is half a minute on).
-        Updater.Current = new Updater(Dispatcher);
-        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () => Updater.Current?.Start());
+        // Updates are looked for once everything else is done (the first check is half a minute
+        // on). The updater is made then too: its HTTP client is a few milliseconds the first
+        // frame does not need. Everything that asks for it allows for it not being there yet.
+        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, () =>
+        {
+            if (_shuttingDown) return;
+            Updater.Current ??= new Updater(Dispatcher);
+            Updater.Current.Start();
+        });
 
         // Restarted by an update: the documents that were open, open again.
         if (_files.Length == 0 && ReopenAfterUpdate()) return;

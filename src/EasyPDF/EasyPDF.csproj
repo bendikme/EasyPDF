@@ -31,6 +31,10 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <InvariantGlobalization>false</InvariantGlobalization>
     <UseSystemResourceKeys>false</UseSystemResourceKeys>
+    <!-- No managed EventSources: the runtime sets up its own at start-up, ten milliseconds and a
+         couple of hundred reflection stubs before Main runs. dotnet-trace's sampling profiler and
+         the runtime's native events still work; EventCounters (dotnet-counters) do not. -->
+    <EventSourceSupport>false</EventSourceSupport>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CA1416;WFO0003</NoWarn>
   </PropertyGroup>
@@ -38,6 +42,9 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
     <RuntimeHostConfigurationOption Include="System.GC.RetainVM" Value="false" />
+    <!-- Windows' own globalization (NLS) rather than ICU: ICU is a 30 MB library loaded and
+         initialised at start-up, and nothing here compares or sorts text by culture. -->
+    <RuntimeHostConfigurationOption Include="System.Globalization.UseNls" Value="true" />
   </ItemGroup>
 
   <ItemGroup>

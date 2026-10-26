@@ -1,7 +1,7 @@
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Security.Principal;
 using System.Text;
 
 namespace EasyPDF.Services;
@@ -27,20 +27,25 @@ public static class SingleInstance
 
     private static string BuildName()
     {
-        string sid;
-        try
-        {
-            sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
-        }
-        catch
-        {
-            sid = Environment.UserName;
-        }
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sid)))[..16];
+        // The user by name: asking Windows for their SID costs several milliseconds, at the
+        // start of every launch, to tell apart what a Local\ name (one per session) already does.
+        var user = $"{Environment.UserDomainName}/{Environment.UserName}";
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(user)))[..16];
         // A separate instance group (for tests run alongside the user's own EasyPDF).
         var group = Environment.GetEnvironmentVariable("EASYPDF_INSTANCE") is { Length: > 0 } g ? $".{g}" : string.Empty;
-        return $"EasyPDF.{hash}.{System.Diagnostics.Process.GetCurrentProcess().SessionId}{group}";
+        return $"EasyPDF.{hash}.{SessionId()}{group}";
     }
+
+    /// <summary>
+    /// The Windows session, asked of the kernel directly: Process.SessionId snapshots every
+    /// process on the machine to answer the same question, which costs 20 ms at start-up.
+    /// </summary>
+    private static uint SessionId() =>
+        ProcessIdToSessionId((uint)Environment.ProcessId, out var session) ? session : 0;
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ProcessIdToSessionId(uint processId, out uint sessionId);
 
     private static string MutexName => $@"Local\{Name}";
 
