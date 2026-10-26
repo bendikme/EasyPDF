@@ -104,19 +104,28 @@ internal static class FeatureChecks
         view.HandleKey(Key.Home, ModifierKeys.None);
         Equal(view.CurrentPage, 0, "Home is the first");
 
-        // A whole page in the window: the wheel turns pages, a notch each, at once.
+        // The wheel turns pages, a notch each, at once - though the page is taller than the window,
+        // and however fast the notches come.
+        Wheel(view, -120);
+        Equal(view.CurrentPage, 1, "a notch down is the next page");
+        Near(view.Offset.Y, view.Layout!.SlotTop(1), 0.5, "from its top, at once");
+        Wheel(view, -120);
+        Equal(view.CurrentPage, 2, "the next notch, straight after, the page after that");
+        Wheel(view, 240);
+        Equal(view.CurrentPage, 0, "two notches in one event, two pages back");
+        Near(view.Offset.Y, view.Layout!.SlotTop(0), 0.5, "to its top");
+
+        // A touchpad follows the fingers through the page instead.
+        for (var i = 0; i < 4; i++) Wheel(view, -30);
+        Equal(view.CurrentPage, 0, "small deltas do not turn a page taller than the window");
+        Check(view.Offset.Y > view.Layout!.SlotTop(0) + 0.5, "they scroll it");
+
+        // A whole page in the window: a touchpad's small deltas add up to a notch, and pages turn no
+        // faster than one a moment.
         view.SetMode(ZoomMode.FitPage);
         Pump(20);
         Check(view.Layout!.SlotBottom(0) - view.ViewportPixelsHeight <= view.Layout.SlotTop(0) + 0.5, "the page fits");
-        Wheel(view, -120);
-        Equal(view.CurrentPage, 1, "a notch down is the next page");
-        Near(view.Offset.Y, view.Layout!.SlotTop(1), 0.5, "at once");
-        Thread.Sleep(200);
-        Wheel(view, 120);
-        Equal(view.CurrentPage, 0, "a notch up, the page before");
-
-        // A touchpad's small deltas add up to a notch, and pages turn no faster than one a moment.
-        Thread.Sleep(200);
+        Equal(view.CurrentPage, 0, "still the first page");
         for (var i = 0; i < 10; i++) Wheel(view, -30);
         Equal(view.CurrentPage, 1, "a stream of small deltas turns one page");
 

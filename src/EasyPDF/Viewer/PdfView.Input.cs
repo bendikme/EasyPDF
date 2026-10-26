@@ -536,13 +536,21 @@ public sealed partial class PdfView
     private long _lastFlip;
 
     /// <summary>
-    /// A sheet at a time, the wheel scrolls a sheet taller than the window; at its edge, a notch's
-    /// worth more turns to the next. A touchpad's stream of small deltas adds up to a notch, and the
-    /// pages turn no faster than one every 180 ms, so one swipe does not run through a dozen.
+    /// A sheet at a time, a notch of the wheel turns a sheet - at once, however tall the sheet and
+    /// however fast the wheel spins. A touchpad follows the fingers through a sheet taller than the
+    /// window; at its edge, a notch's worth more turns to the next, and the pages turn no faster than
+    /// one every 180 ms, so one swipe does not run through a dozen.
     /// </summary>
     private void WheelOnePageAtATime(int delta, double step, bool notch)
     {
         var direction = delta < 0 ? 1 : -1;
+        if (notch && delta != 0)
+        {
+            _edgeWheel = 0;
+            FlipPage(direction, steps: Math.Abs(delta) / 120);
+            return;
+        }
+
         if (CanScrollWithinPage(direction))
         {
             _edgeWheel = 0;

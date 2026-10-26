@@ -56,9 +56,10 @@ follows every kind of link a PDF can hold.
 - **Continuous, one page at a time, or a grid of pages** (the page display button, or the More
   menu): one page, two side by side, two with the cover alone (a book's spreads), two one above
   the other, 2 x 2, 3 x 2, 3 x 3 - or any grid up to 6 x 4, picked by pointing at cells. A fixed
-  number at a time, nothing of the other pages is in sight. One page at a time, the arrow keys,
-  Page Up/Down, Space, the wheel and the scroll bar scroll a page taller than the window, then
-  turn to the next; several at a time, every key turns the whole sheet - as many pages as are
+  number at a time, nothing of the other pages is in sight. Each notch of the wheel turns a
+  sheet, however large it is and however fast the wheel spins. One page at a time, the arrow
+  keys, Page Up/Down, Space, a touchpad and the scroll bar scroll a page taller than the window,
+  then turn to the next; several at a time, every key turns the whole sheet - as many pages as are
   shown - however large it is, and Ctrl+Up/Down scroll within it. A turn is at once, not
   scrolling, and each shows for a moment which pages these are ("5-8 of 2124"),
   with a line for how far through the document. A grid of several pages is fitted whole when it
