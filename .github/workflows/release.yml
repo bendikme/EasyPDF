@@ -1,6 +1,7 @@
 name: Release
 
-# Cutting a release: git tag v1.2.3 && git push origin v1.2.3
+# Cutting a release: add the version's section to CHANGELOG.md, then
+# git tag v1.2.3 && git push origin v1.2.3
 # (or Actions > Release > Run workflow, with a version).
 
 on:
@@ -76,6 +77,24 @@ jobs:
           "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "tag=v$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
+      - name: Take the release notes from CHANGELOG.md
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # The version's section: from its "## 1.2.3 - date" heading to the next heading.
+          $section = (Get-Content -Raw CHANGELOG.md) -split '(?m)^## ' |
+            Where-Object { $_ -match "^$([regex]::Escape($env:VERSION))(\s|$)" } |
+            Select-Object -First 1
+          if (-not $section) {
+            Write-Host "::error::CHANGELOG.md has no section for $env:VERSION. Add '## $env:VERSION - <date>' with what changed."
+            exit 1
+          }
+          # Each entry on one line: release notes break lines where the file wraps them.
+          $notes = ($section -split "`n", 2)[1].Trim() -replace '\r?\n {2,}', ' '
+          $notes | Out-File -FilePath (Join-Path $env:RUNNER_TEMP 'release-notes.md') -Encoding utf8
+          Get-Content (Join-Path $env:RUNNER_TEMP 'release-notes.md')
+
       - name: Build the release artifacts
         shell: pwsh
         run: ./build/release.ps1 -Version ${{ steps.version.outputs.version }}
@@ -85,6 +104,8 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: EasyPDF ${{ steps.version.outputs.version }}
+          # The changelog's section, followed by GitHub's link to the full list of commits.
+          body_path: ${{ runner.temp }}/release-notes.md
           generate_release_notes: true
           draft: false
           prerelease: false
